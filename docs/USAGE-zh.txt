@@ -1,0 +1,51 @@
+VIA 离线版 · K-STAR 定制（v1.0.2）
+====================================
+
+一、怎么用
+----------
+就一个文件：VIA-Offline-KS-1.0.2.exe，双击运行，免安装、无依赖。
+
+  * 首次启动会解压到系统临时目录再运行（约 3–6 秒），退出后自动清理
+  * 设置保存在 exe 同目录的 VIA-Offline-Data 文件夹；删掉即恢复默认，
+    想带着配置换机器就把它一起拷走
+  * Windows 10/11 64 位；首次运行会被 SmartScreen 拦一下（未签名），
+    选「更多信息 → 仍要运行」
+
+二、这是什么
+------------
+基于 the-via/app（GPL-3.0）的**非官方**离线构建：插上键盘就能改键，全程不联网。
+与 VIA 项目及其维护者无隶属或背书关系。
+
+v1.0.1 相对 v1.0.0 的变化：
+  * 品牌改为 K-STAR（logo、标题、顶栏标识同步更换）
+  * 移除随包的 Gotham Rounded 商业字体，改用开源的 Fira Sans（OFL）
+  * 移除「分享到 Gist」功能（原先借用上游的 OAuth 应用）
+  * 移除授权不明的 Symbola 字体，改用 Noto Sans Symbols / 2（SIL OFL 1.1）
+
+三、离线保证
+------------
+键盘定义（3351 个 JSON）、Fira Sans 字体、three.js 的 Draco 解码器全部打包。
+Chromium 的拼写检查词典下载、组件更新、域名可靠性上报、sync、pings、DNS 预解析
+均已关闭；解析器只放行 127.0.0.1/localhost，应用层再对非本机请求一律 cancel。
+
+自检（PowerShell，无窗口启动后自动退出）：
+  $env:VIA_SMOKE_TEST="1"; $env:VIA_SMOKE_OUT="$PWD\report.json"; .\VIA-Offline-KS-1.0.2.exe
+报告里 blockedRequests 应为 []、probeBlocked 应为 true。
+
+四、键盘识别
+------------
+随包 1898 个厂商产品 ID（= VIA 官方定义库构建快照），启动即预授权，
+插上键盘就能被识别，不需要弹窗、不需要联网。
+
+识别不到时，双击同目录的「诊断-键盘.cmd」（从仓库或发行页另附），
+或用环境变量放行未知设备：
+  set VIA_ALLOW_UNKNOWN_DEVICES=1
+  VIA-Offline-KS-1.0.2.exe
+
+五、许可与免责
+--------------
+  * the-via/app 与 the-via/keyboards 均为 GPL-3.0；本构建整体以 GPL-3.0 分发，
+    修改声明见仓库 NOTICE.md，源码见 https://github.com/kevinx-key/via-offline
+  * Fira Sans 为 SIL OFL 1.1；Electron/Chromium 许可随包
+  * 按「现状」提供，不附带担保；改键/刷写固件的风险由使用者承担
+

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+out/
+public/definitions/
+.vite/
+*.log
+*.exe
+*.blockmap

@@ -1,0 +1,45 @@
+{
+  "name": "via-offline-ks",
+  "productName": "VIA-Offline-KS",
+  "version": "1.0.2",
+  "description": "Offline VIA build (K-STAR, unofficial)",
+  "author": "K Star Studio",
+  "license": "GPL-3.0",
+  "main": "main.js",
+  "devDependencies": {
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "studio.kstar.via.offline",
+    "productName": "VIA-Offline-KS",
+    "electronVersion": "33.4.11",
+    "directories": {
+      "output": "out",
+      "buildResources": "."
+    },
+    "files": [
+      "main.js",
+      "server.js",
+      "icon.png",
+      "NOTICE.txt",
+      "LICENSE",
+      "dist/**/*"
+    ],
+    "compression": "maximum",
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "icon.ico"
+    },
+    "portable": {
+      "artifactName": "VIA-Offline-KS-${version}.exe",
+      "requestExecutionLevel": "user"
+    }
+  }
+}
+
+

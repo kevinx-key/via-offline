@@ -1,0 +1,42 @@
+appId: studio.kstar.via.offline
+productName: VIA-Offline-KS
+copyright: GPL-3.0 · K Star Studio
+
+electronVersion: 33.4.11
+
+directories:
+  output: out
+  buildResources: .
+
+files:
+  - main.js
+  - server.js
+  - icon.png
+  - NOTICE.txt
+  - LICENSE
+  - dist/**/*
+
+compression: maximum
+
+win:
+  target:
+    - target: portable
+      arch: [x64]
+  icon: icon.ico
+  artifactName: ${productName}-${version}-win-x64.${ext}
+
+mac:
+  target:
+    - target: zip
+      arch: [x64, arm64]
+  icon: icon.png
+  category: public.app-category.utilities
+  artifactName: ${productName}-${version}-mac-${arch}.${ext}
+
+linux:
+  target:
+    - target: AppImage
+      arch: [x64]
+  icon: icon.png
+  category: Utility
+  artifactName: ${productName}-${version}-linux-${arch}.${ext}
