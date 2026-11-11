@@ -9,6 +9,47 @@ export type Theme = {
 
 export const THEMES = {
   ...{
+    // 山紫云白：奶白键帽 + 紫色字符 / 紫色大键，白色定位板
+    // 白天默认：GMK Olivia 经典奶白 + 炭黑 + 藕粉
+    OLIVIA: {
+      alpha: {c: '#e9e0d4', t: '#363434'},
+      mod: {c: '#363434', t: '#e8c4b8'},
+      accent: {c: '#e8c4b8', t: '#363434'},
+    },
+    // 黑白：紫韵的紫色位全部换黑
+    HEIBAI: {
+      alpha: {c: '#f2f7fd', t: '#14161b'},
+      mod: {c: '#1b1d23', t: '#f7faff'},
+      accent: {c: '#2b2e36', t: '#ffffff'},
+    },
+    // 蓝白：紫韵的紫色位全部换品牌蓝
+    LANBAI: {
+      alpha: {c: '#f2f7fd', t: '#0071e3'},
+      mod: {c: '#0071e3', t: '#ffffff'},
+      accent: {c: '#0071e3', t: '#ffffff'},
+    },
+    ZIYUN: {
+      // 紫韵：冷白键帽 + 紫中带蓝的字符；比纯蓝紫保留更多紫色。
+      alpha: {c: '#f2f7fd', t: '#533892'},
+      mod: {c: '#623faa', t: '#f7faff'},
+      accent: {c: '#724cbb', t: '#ffffff'},
+    },
+    // ERROR：深灰键帽 + 白字 / 红色警示大键，黑色定位板
+    ERROR: {
+      alpha: {c: '#34363f', t: '#f1f1f3'},
+      mod: {c: '#202127', t: '#c9cbd1'},
+      accent: {c: '#e84540', t: '#ffffff'},
+    },
+    STARTHOCK_LIGHT: {
+      alpha: {c: '#e8e8ed', t: '#1d1d1f'},
+      mod: {c: '#d2d2d7', t: '#1d1d1f'},
+      accent: {c: '#0071e3', t: '#ffffff'},
+    },
+    STARTHOCK_DARK: {
+      alpha: {c: '#2b303b', t: '#e6edf3'},
+      mod: {c: '#1f242d', t: '#aab4c0'},
+      accent: {c: '#58a6ff', t: '#0d1117'},
+    },
     OLIVIA_DARK: {
       alpha: {
         c: '#363434',
@@ -292,5 +333,3 @@ export const THEMES = {
   },
   ...REMOTETHEMES,
 };
-
-

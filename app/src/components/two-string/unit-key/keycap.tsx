@@ -66,7 +66,7 @@ const paintKeycapLabel = (
 
   context.scale(dpi, dpi);
   const fontFamily =
-    'Fira Sans, Arial Rounded MT, Arial Rounded MT Bold, Arial';
+    "'Fira Sans', 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif";
   // Margins from face edge to where text is drawn
   const topLabelMargin = {x: 4, y: 4};
   const bottomLabelMargin = {x: 4, y: 4};
@@ -85,7 +85,7 @@ const paintKeycapLabel = (
   context.fillStyle = legendColor;
   if (label === undefined) {
   } else if (label.topLabel && label.bottomLabel) {
-    let fontSize = 16;
+    let fontSize = 13;
     let fontHeight = 0.75 * fontSize;
     let topLabelOffset = label.offset[0] * fontHeight;
     let bottomLabelOffset = label.offset[1] * fontHeight;
@@ -101,7 +101,7 @@ const paintKeycapLabel = (
       canvasHeight - bottomLabelMargin.y - bottomLabelOffset,
     );
   } else if (label.centerLabel) {
-    let fontSize = 13 * label.size;
+    let fontSize = 11.5 * label.size;
     let fontHeight = 0.75 * fontSize;
     let faceMidLeftY = canvasHeight / 2;
     context.font = `bold ${fontSize}px ${fontFamily}`;
@@ -116,7 +116,7 @@ const paintKeycapLabel = (
       canvasWidth - centerLabelMargin.x
     );
   } else if (typeof label.label === 'string') {
-    let fontSize = 22;
+    let fontSize = 17;
     let fontHeight = 0.75 * fontSize;
     context.font = `bold ${fontSize}px ${fontFamily}`;
     context.fillText(
@@ -249,17 +249,13 @@ export const Keycap: React.FC<TwoStringKeycapProps> = React.memo((props) => {
       : [zUp, rotation[2] + Math.PI * Number(shouldRotate)];
   const wasPressed = keyState === TestKeyState.KeyUp;
   const keycapColor =
-    DisplayMode.Test === mode
-      ? pressedState === KeycapState.Unpressed
-        ? wasPressed
-          ? 'mediumvioletred'
-          : 'lightgrey'
-        : 'mediumvioletred'
-      : pressedState === KeycapState.Unpressed
-      ? 'lightgrey'
-      : 'lightgrey';
+    pressedState === KeycapState.Unpressed
+      ? wasPressed
+        ? 'var(--color_success)'
+        : 'var(--color_accent)'
+      : 'var(--color_accent)';
   const keycapOpacity =
-    pressedState === KeycapState.Unpressed ? (wasPressed ? 0.4 : 0) : 0.6;
+    pressedState === KeycapState.Unpressed ? (wasPressed ? 0.22 : 0) : 0.55;
 
   const [onClick, onPointerOver, onPointerOut, onPointerDown] = useMemo(() => {
     const noop = () => {};
@@ -400,7 +396,7 @@ export const Keycap: React.FC<TwoStringKeycapProps> = React.memo((props) => {
           ) : null}
           <CanvasContainer
             style={{
-              borderRadius: 4,
+              borderRadius: 5,
               background: props.color.c,
               height: '100%',
             }}
@@ -422,14 +418,18 @@ export const Keycap: React.FC<TwoStringKeycapProps> = React.memo((props) => {
 
 const GlowContainer = styled.div<{$selected: boolean}>`
   box-sizing: border-box;
-  padding: 2px 6px 10px 6px;
-  transition: transform 0.2s ease-out;
-  box-shadow: inset -1px -1px 0 rgb(0 0 0 / 20%),
-    inset 1px 1px 0 rgb(255 255 255 / 20%);
+  padding: 2px 5px 8px 5px;
+  border-radius: 7px;
+  transition: transform 0.16s ease, filter 0.16s ease;
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  box-shadow:
+    0 2px 3px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.24);
   animation: ${(p) =>
     p.$selected ? '.75s infinite alternate select-glow' : 'initial'};
   &:hover {
-    transform: perspective(100px) translateZ(-5px);
+    transform: perspective(100px) translateZ(-3px);
     animation: 0.5s 1 forwards select-glow;
   }
 `;

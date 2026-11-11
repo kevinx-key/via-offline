@@ -10,8 +10,9 @@ export const HiddenInput = styled.input`
 const Switch = styled.label`
   position: relative;
   display: inline-block;
-  width: 60px;
-  height: 34px;
+  width: 42px;
+  height: 24px;
+  flex: none;
 `;
 const Slider = styled.span<{$ischecked?: boolean}>`
   position: absolute;
@@ -21,23 +22,29 @@ const Slider = styled.span<{$ischecked?: boolean}>`
   right: 0;
   bottom: 0;
   background-color: ${(props) =>
-    props.$ischecked ? 'var(--color_accent)' : 'var(--bg_control)'};
-  -webkit-transition: 0.4s;
-  transition: 0.4s;
-  border-radius: 4px;
+    props.$ischecked ? 'var(--color_accent)' : 'var(--bg_control-highlighted)'};
+  -webkit-transition: 0.18s ease;
+  transition: 0.18s ease;
+  border-radius: 999px;
+  border: 1px solid
+    ${(props) =>
+      props.$ischecked ? 'var(--color_accent)' : 'var(--border_color_cell)'};
   &:before {
     position: absolute;
     content: '';
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    border-radius: 4px;
-    background-color: ${(props) =>
-      !props.$ischecked ? 'var(--bg_icon)' : 'var(--color_inside-accent)'};
-    -webkit-transition: 0.4s;
-    transition: 0.4s;
-    ${(props) => (props.$ischecked ? 'transform: translateX(26px)' : '')};
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    top: 2px;
+    border-radius: 50%;
+    background-color: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    -webkit-transition: 0.18s ease;
+    transition: 0.18s ease;
+    ${(props) => (props.$ischecked ? 'transform: translateX(18px)' : '')};
+  }
+  &:hover {
+    filter: brightness(0.96);
   }
 `;
 

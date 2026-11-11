@@ -89,6 +89,7 @@ export type Settings = {
   renderMode: '3D' | '2D';
   themeMode: 'light' | 'dark';
   themeName: string;
+  uiScale: number;
   macroEditor: MacroEditorSettings;
   testKeyboardSoundsSettings: TestKeyboardSoundsSettings;
   designDefinitionVersion: DefinitionVersion;

@@ -2,8 +2,9 @@ import styled from 'styled-components';
 import {useTranslation} from 'react-i18next';
 
 const LoadingText = styled.div`
-  font-size: 30px;
-  color: var(--color_label-highlighted);
+  font-size: 15px;
+  color: var(--color_label);
+  letter-spacing: 0.01em;
 `;
 
 enum LoadingLabel {

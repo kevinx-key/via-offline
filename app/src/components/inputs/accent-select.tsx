@@ -1,29 +1,7 @@
 import React from 'react';
 import Select, {Props} from 'react-select';
+
 const customStyles = {
-  option: (provided: any, state: any) => {
-    return {
-      ...provided,
-      '&:hover': {
-        backgroundColor: state.isSelected
-          ? 'var(--color_accent)'
-          : 'var(--bg_control)',
-      },
-      ':active': {
-        backgroundColor: 'var(--bg_control)',
-      },
-      background: state.isSelected
-        ? 'var(--color_accent)'
-        : state.isFocused
-        ? 'var(--bg_control)'
-        : 'var(--bg_menu)',
-      color: state.isSelected
-        ? 'var(--color_inside-accent)'
-        : state.isFocused
-        ? 'var(--color_accent)'
-        : 'var(--color_accent)',
-    };
-  },
   container: (provided: any) => ({
     ...provided,
     lineHeight: 'initial',
@@ -31,61 +9,76 @@ const customStyles = {
   }),
   input: (provided: any) => ({
     ...provided,
-    color: 'var(--color_accent)',
-    opacity: 0.5,
+    color: 'var(--color_label-highlighted)',
   }),
   singleValue: (provided: any) => ({
     ...provided,
-    color: 'var(--color_accent)',
-  }),
-  dropdownIndicator: (provided: any) => ({
-    ...provided,
-    color: 'var(--color_accent)',
-  }),
-  indicatorSeparator: (provided: any) => ({
-    ...provided,
-    backgroundColor: 'var(--color_accent)',
-  }),
-  menuList: (provided: any) => ({
-    ...provided,
-    borderColor: 'var(--color_accent)',
-    backgroundColor: 'var(--bg_menu)',
+    color: 'var(--color_label-highlighted)',
   }),
   placeholder: (provided: any) => ({
     ...provided,
-    color: 'var(--color_accent)',
+    color: 'var(--color_label)',
   }),
+  dropdownIndicator: (provided: any) => ({
+    ...provided,
+    color: 'var(--color_label)',
+    padding: 6,
+  }),
+  indicatorSeparator: () => ({display: 'none'}),
   valueContainer: (provided: any) => ({
     ...provided,
+    padding: '0 8px',
+    color: 'var(--color_label-highlighted)',
+  }),
+  control: (provided: any, state: any) => ({
+    ...provided,
+    boxShadow: 'none',
+    minHeight: 34,
+    height: 34,
+    borderRadius: 8,
+    fontSize: 12.5,
     ':active': {
-      backgroundColor: 'var(--bg_control)',
+      backgroundColor: 'transparent',
       borderColor: 'var(--color_accent)',
     },
     '&:hover': {
       borderColor: 'var(--color_accent)',
     },
-    color: 'var(--color_accent)',
+    color: 'var(--color_label-highlighted)',
+    border: '1px solid var(--border_color_cell)',
+    background: 'var(--bg_menu)',
+    overflow: 'hidden',
+    width: state.selectProps.width || 220,
+  }),
+  menu: (provided: any) => ({
+    ...provided,
+    borderRadius: 10,
+    border: '1px solid var(--border_color_cell)',
+    boxShadow: 'var(--shadow-2)',
+    background: 'var(--bg_menu)',
+    overflow: 'hidden',
+    zIndex: 50,
+  }),
+  menuList: (provided: any) => ({
+    ...provided,
+    padding: 5,
     background: 'var(--bg_menu)',
   }),
-  control: (provided: any, state: any) => {
-    const res = {
-      ...provided,
-      boxShadow: 'none',
-      ':active': {
-        backgroundColor: 'transparent',
-        borderColor: 'var(--color_accent)',
-      },
-      '&:hover': {
-        borderColor: 'var(--color_accent)',
-      },
-      color: 'var(--color_accent)',
-      borderColor: '1px solid var(--color_accent)',
-      background: 'var(--bg_menu)',
-      overflow: 'hidden',
-      width: state.selectProps.width || 250,
-    };
-    return res;
-  },
+  option: (provided: any, state: any) => ({
+    ...provided,
+    borderRadius: 7,
+    fontSize: 12.5,
+    padding: '8px 9px',
+    background: state.isSelected
+      ? 'var(--bg_accent-soft)'
+      : state.isFocused
+        ? 'var(--bg_control)'
+        : 'transparent',
+    color: state.isSelected
+      ? 'var(--color_accent)'
+      : 'var(--color_label-highlighted)',
+    cursor: 'pointer',
+  }),
 };
 
 export const AccentSelect: React.FC<Props> = (props) => (

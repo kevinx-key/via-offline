@@ -42,7 +42,7 @@ const SliderInput = styled.input.attrs({type: 'range'})<any>`
 
 export const RangeValueDisplay = styled.span`
   text-align: right;
-  font-size: 20px;
+  font-size: 12.5px;
   color: var(--color_label_highlighted);
   white-space: nowrap;
   min-width: 40px;

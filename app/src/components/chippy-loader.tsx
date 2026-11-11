@@ -1,8 +1,7 @@
 import styled from 'styled-components';
 import imgSrc from 'assets/images/chippy_600.png';
 import {Theme} from 'src/utils/themes';
-import {getDarkenedColor} from 'src/utils/color-math';
-import {getSelectedTheme} from 'src/store/settingsSlice';
+import {getThemeMode} from 'src/store/settingsSlice';
 import {useAppSelector} from 'src/store/hooks';
 
 const defaultChippy = {
@@ -66,18 +65,30 @@ type Props = {
   theme: Theme;
 };
 
-const SvgComponent: React.FC<any & {theme: Theme}> = (props) => {
-  const {theme} = props;
-
-  const darkAccent = getDarkenedColor(theme.accent.c, 0.8);
-  const colorMap = {
-    'upper-body': theme.mod.t,
-    'lower-body': theme.mod.c,
-    accent: darkAccent,
-    bowtie: darkAccent,
-    pins: darkAccent,
-    feet: '#000',
-  };
+const SvgComponent: React.FC<
+  any & {theme: Theme; mode: 'light' | 'dark'}
+> = (props) => {
+  const {mode} = props;
+  const colorMap =
+    mode === 'light'
+      ? {
+          // 白天：GMK Olivia（奶白 + 炭黑 + 藕粉）
+          'upper-body': '#e9e0d4',
+          'lower-body': '#363434',
+          accent: '#e8c4b8',
+          bowtie: '#e8c4b8',
+          pins: '#e8c4b8',
+          feet: '#363434',
+        }
+      : {
+          // 黑夜：红黑机器人
+          'upper-body': '#1b1c22',
+          'lower-body': '#e84540',
+          accent: '#e84540',
+          bowtie: '#e84540',
+          pins: '#e84540',
+          feet: '#000000',
+        };
   return (
     <svg
       id="Layer_1"
@@ -243,13 +254,13 @@ export default function ChippyLoader(props: Props) {
     height + containerPadding * 2,
     width + containerPadding * 2,
   ];
-  const selectedTheme = useAppSelector(getSelectedTheme);
+  const themeMode = useAppSelector(getThemeMode);
 
   return (
     <LoaderContainer>
       <CircleContainer
         $progress={props.progress}
-        $progressColor={getDarkenedColor(selectedTheme.accent.c, 0.9)}
+        $progressColor={themeMode === 'light' ? '#e8c4b8' : '#e84540'}
         $containerHeight={containerHeight}
         $containerWidth={containerWidth}
       >
@@ -259,7 +270,7 @@ export default function ChippyLoader(props: Props) {
             width: width,
           }}
         >
-          <SvgComponent theme={props.theme} />
+          <SvgComponent theme={props.theme} mode={themeMode} />
         </div>
       </CircleContainer>
     </LoaderContainer>

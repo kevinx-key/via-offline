@@ -13,6 +13,7 @@ import {
 import {useAppDispatch, useAppSelector} from 'src/store/hooks';
 import {getSelectedKeymap, setLayer} from 'src/store/keymapSlice';
 import {
+  getGlobalCaptureEnabled,
   getIsTestMatrixEnabled,
   getTestKeyboardSoundsSettings,
   setTestMatrixEnabled,
@@ -38,6 +39,7 @@ export const Test = (props: {dimensions?: DOMRect; nDimension: NDimension}) => {
   const selectedDefinition = useAppSelector(getSelectedDefinition);
   const keyDefinitions = useAppSelector(getSelectedKeyDefinitions);
   const isTestMatrixEnabled = useAppSelector(getIsTestMatrixEnabled);
+  const globalCaptureEnabled = useAppSelector(getGlobalCaptureEnabled);
   const testKeyboardSoundsSettings = useAppSelector(
     getTestKeyboardSoundsSettings,
   );
@@ -47,6 +49,7 @@ export const Test = (props: {dimensions?: DOMRect; nDimension: NDimension}) => {
 
   const [globalPressedKeys, setGlobalPressedKeys] = useGlobalKeys(
     !isTestMatrixEnabled && isShowingTest,
+    globalCaptureEnabled && isShowingTest,
   );
   const [matrixPressedKeys, setMatrixPressedKeys] = useMatrixTest(
     isTestMatrixEnabled && isShowingTest,

@@ -11,50 +11,52 @@ import {keymapExtras} from 'src/utils/keymap-extras';
 
 const Container = styled.div`
   position: relative;
-  font-size: 18px;
+  font-size: 12px;
   pointer-events: none;
-  font-weight: 400;
+  font-weight: 500;
   flex: 0 0 auto;
 `;
 
 const LayoutTitle = styled.label`
   pointer-events: all;
-  display: inline-block;
-  background: var(--color_accent);
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
-  font-size: 18px;
-  text-transform: uppercase;
-  color: var(--color_inside-accent);
-  padding: 1px 10px;
-  border: solid 1px var(--bg_control);
-  border-top: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg_menu);
+  border-radius: 9px;
+  font-size: 12px;
+  color: var(--color_label-highlighted);
+  padding: 6px 10px;
+  border: 1px solid var(--border_color_cell);
   cursor: pointer;
-  transition: all 0.1s ease-out;
+  transition: all 0.16s ease;
   white-space: nowrap;
+  box-shadow: var(--shadow-1);
 
   &:hover {
-    filter: brightness(0.7);
+    border-color: var(--color_accent);
+    color: var(--color_accent);
   }
 `;
 
 const LayoutList = styled.ul<{$show: boolean}>`
-  padding: 0;
-  border: 1px solid var(--bg_control);
+  padding: 5px;
+  border: 1px solid var(--border_color_cell);
   width: 220px;
-  border-radius: 6px;
+  border-radius: 10px;
   background-color: var(--bg_menu);
+  box-shadow: var(--shadow-2);
   margin: 0;
-  margin-top: 5px;
+  margin-top: 6px;
   right: 0;
   position: absolute;
   pointer-events: ${(props) => (props.$show ? 'all' : 'none')};
   transition: all 0.2s ease-out;
-  z-index: 11;
+  z-index: 41;
   opacity: ${(props) => (props.$show ? 1 : 0)};
   overflow-y: auto;
   max-height: 400px;
-  transform: ${(props) => (props.$show ? 0 : `translateY(-5px)`)};
+  transform: ${(props) => (props.$show ? 'translateY(0)' : `translateY(-5px)`)};
 `;
 
 const LayoutButton = styled.button<{$selected?: boolean}>`
@@ -66,16 +68,17 @@ const LayoutButton = styled.button<{$selected?: boolean}>`
   text-overflow: ellipsis;
   width: 100%;
   border: none;
+  border-radius: 7px;
   background: ${(props) =>
-    props.$selected ? 'var(--bg_icon-highlighted)' : 'transparent'};
+    props.$selected ? 'var(--bg_accent-soft)' : 'transparent'};
   color: ${(props) =>
     props.$selected
-      ? 'var(--color_icon_highlighted)'
+      ? 'var(--color_accent)'
       : 'var(--color_label-highlighted)'};
   cursor: pointer;
   text-align: left;
-  font-size: 14px;
-  padding: 5px 10px;
+  font-size: 12px;
+  padding: 7px 8px;
 
   &:hover {
     border: none;

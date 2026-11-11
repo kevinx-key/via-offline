@@ -1,4 +1,4 @@
-import {faSpinner, faUnlock} from '@fortawesome/free-solid-svg-icons';
+import {faKeyboard, faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {a, config, useSpring} from '@react-spring/three';
 import {
@@ -18,7 +18,7 @@ import {
   getCustomDefinitions,
   getSelectedDefinition,
 } from 'src/store/definitionsSlice';
-import {reloadConnectedDevices} from 'src/store/devicesThunks';
+import {requestDeviceFromUser} from 'src/store/devicesThunks';
 import {useAppDispatch, useAppSelector} from 'src/store/hooks';
 import {
   getConfigureKeyboardIsSelectable,
@@ -33,6 +33,7 @@ import {OVERRIDE_HID_CHECK} from 'src/utils/override';
 import {useSize} from 'src/utils/use-size';
 import {Object3D, SpotLight as ThreeSpotLight} from 'three';
 import {useLocation} from 'wouter';
+import {useTranslation} from 'react-i18next';
 import {AccentButtonLarge} from '../inputs/accent-button';
 import {ConfigureKeyboard} from '../n-links/keyboard/configure';
 import {Design} from '../n-links/keyboard/design';
@@ -84,6 +85,7 @@ export const NonSuspenseCanvasRouter = () => {
   const loadProgress = useAppSelector(getLoadProgress);
   const {progress} = useProgress();
   const dispatch = useAppDispatch();
+  const {t} = useTranslation();
   const dimensions = useSize(body);
   const localDefinitions = Object.values(useAppSelector(getCustomDefinitions));
   const selectedDefinition = useAppSelector(getSelectedDefinition);
@@ -124,7 +126,7 @@ export const NonSuspenseCanvasRouter = () => {
     <>
       <div
         style={{
-          height: 500,
+          height: 'clamp(340px, 44vh, 500px)',
           width: '100%',
           top: 0,
           transform: hideCanvasScene
@@ -166,13 +168,13 @@ export const NonSuspenseCanvasRouter = () => {
             {showAuthorizeButton ? (
               !selectedDefinition ? (
                 <AccentButtonLarge
-                  onClick={() => dispatch(reloadConnectedDevices())}
+                  onClick={() => dispatch(requestDeviceFromUser())}
                   style={{width: 'max-content'}}
                 >
-                  Authorize device
+                  {t('Choose keyboard')}
                   <FontAwesomeIcon
                     style={{marginLeft: '10px'}}
-                    icon={faUnlock}
+                    icon={faKeyboard}
                   />
                 </AccentButtonLarge>
               ) : (

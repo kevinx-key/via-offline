@@ -1,10 +1,8 @@
-import {KeyColorType} from '@the-via/reader';
 import React from 'react';
 import {useMemo} from 'react';
 import {shallowEqual} from 'react-redux';
 import {useAppSelector} from 'src/store/hooks';
-import {getSelectedTheme} from 'src/store/settingsSlice';
-import {getDarkenedColor} from 'src/utils/color-math';
+import {getThemeMode} from 'src/store/settingsSlice';
 import {CSSVarObject} from 'src/utils/keyboard-rendering';
 import styled from 'styled-components';
 
@@ -34,8 +32,8 @@ const InnerCase = styled.div<{
 export const CaseInsideBorder = 10;
 
 export const Case = React.memo((props: {width: number; height: number}) => {
-  const theme = useAppSelector(getSelectedTheme);
-  const outsideColor = useMemo(() => theme[KeyColorType.Accent].c, [theme]);
+  const themeMode = useAppSelector(getThemeMode);
+  const light = themeMode === 'light';
   const properWidth =
     props.width * CSSVarObject.keyXPos - CSSVarObject.keyXSpacing;
   const properHeight =
@@ -47,31 +45,52 @@ export const Case = React.memo((props: {width: number; height: number}) => {
     properHeight + insideBorder,
     properHeight + insideBorder * 3,
   ];
-  const [stp1, stp2, stp3] = [0.15, 0.25, 0.2].map((num) =>
-    getDarkenedColor(outsideColor, num),
+
+  const palette = useMemo(
+    () =>
+      light
+        ? {
+            outside: '#f4f7fb',
+            edge: '#d4dce7',
+            top: '#ffffff',
+            mid: '#f8fafd',
+            bottom: '#e6edf6',
+            shadow: '0 10px 28px rgba(28, 38, 56, 0.16)',
+          }
+        : {
+            outside: '#17181d',
+            edge: '#2f3038',
+            top: '#2b2c33',
+            mid: '#1c1d22',
+            bottom: '#111216',
+            shadow: '0 14px 34px rgba(0, 0, 0, 0.55)',
+          },
+    [light],
   );
+
   return (
     <CaseGroup>
       <OuterCase
-        background={outsideColor}
+        background={palette.outside}
         width={outsideWidth}
         height={outsideHeight}
         style={{
-          borderRadius: 8,
-          boxShadow: 'var(--box-shadow-keyboard)',
+          borderRadius: 10,
+          border: `1px solid ${palette.edge}`,
+          boxShadow: palette.shadow,
         }}
-      ></OuterCase>
+      />
       <InnerCase
-        background={`linear-gradient(200deg,${stp1} 40%,${stp2},${stp3} 80%)`}
+        background={`linear-gradient(200deg, ${palette.top} 38%, ${palette.mid}, ${palette.bottom} 82%)`}
         width={insideWidth}
         height={insideHeight}
         style={{
           transform: `translate( ${insideWidth - properWidth}px,
            ${insideHeight - properHeight}px)`,
-          boxShadow: 'var(--box-shadow-keyboard)',
-          borderRadius: 8,
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
+          borderRadius: 9,
         }}
-      ></InnerCase>
+      />
     </CaseGroup>
   );
 }, shallowEqual);

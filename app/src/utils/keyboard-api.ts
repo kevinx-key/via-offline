@@ -230,7 +230,15 @@ export class KeyboardAPI {
 
   async getProtocolVersion() {
     try {
-      const [, hi, lo] = await this.hidCommand(APICommand.GET_PROTOCOL_VERSION);
+      // Some non-VIA HID devices accept the report but never answer. Without
+      // a bound, one such device blocks the whole device scan forever.
+      const response = await Promise.race([
+        this.hidCommand(APICommand.GET_PROTOCOL_VERSION),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('protocol timeout')), 2500),
+        ),
+      ]);
+      const [, hi, lo] = response;
       return shiftTo16Bit([hi, lo]);
     } catch (e) {
       return -1;

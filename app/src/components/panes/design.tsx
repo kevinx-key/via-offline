@@ -8,20 +8,14 @@ import {AccentUploadButton} from '../inputs/accent-upload-button';
 import Layouts from '../Layouts';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faBook, faUpload, faXmark} from '@fortawesome/free-solid-svg-icons';
-import {
-  keyboardDefinitionV2ToVIADefinitionV2,
-  isVIADefinitionV2,
-  isKeyboardDefinitionV2,
-  keyboardDefinitionV3ToVIADefinitionV3,
-  isVIADefinitionV3,
-  isKeyboardDefinitionV3,
-  DefinitionVersionMap,
-  BuiltInKeycodeModule,
-  VIADefinitionV2,
-  VIADefinitionV3,
-} from '@the-via/reader';
+import {DefinitionVersionMap} from '@the-via/reader';
 import type {DefinitionVersion} from '@the-via/reader';
 import {resolveDefinitionName} from 'src/utils/definition-name';
+import {
+  DefinitionImportError,
+  ParsedDefinition,
+  parseDefinitionText,
+} from 'src/utils/definition-import';
 import {
   ControlRow,
   Label,
@@ -75,10 +69,11 @@ const DesignErrorMessage = styled(ErrorMessage)`
   font-style: italic;
 `;
 
-const DesignWarningMessage = styled(ErrorMessage)`
+const DesignInfoMessage = styled.div`
   margin: 0;
-  color: gold;
-  font-style: italic;
+  color: var(--color_success);
+  font-size: 13px;
+  line-height: 1.5;
 `;
 
 const Container = styled.div`
@@ -136,151 +131,77 @@ const makeReaderPromise = (file: File): Promise<[string, string]> => {
   });
 };
 
-const isVIADefinition = (
-  definition: VIADefinitionV2 | VIADefinitionV3 | null | undefined,
-): definition is VIADefinitionV2 | VIADefinitionV3 => {
-  return isVIADefinitionV2(definition) || isVIADefinitionV3(definition);
-};
-
-const formatDefinitionError = (
-  fileName: string,
-  error: {
-    instancePath?: string;
-    dataPath?: string;
-    schemaPath?: string;
-    keyword?: string;
-    message?: string;
-  },
-) => {
-  if (error.keyword === 'not' && error.schemaPath === '#/allOf/0/not') {
-    return `${fileName} keycodes: qmk_lighting cannot be combined with explicit QMK lighting keycode modules`;
-  }
-
-  const path = error.instancePath || error.dataPath;
-  return `${fileName} ${path ? path + ': ' : 'Object: '}${error.message}`;
-};
-
-const STANDARD_LIGHTING_MENU_IDS = [
-  'qmk_rgblight',
-  'qmk_backlight_rgblight',
-  'qmk_rgb_matrix',
-  'qmk_backlight',
-];
-
-const getDefinitionWarnings = (
-  definition: VIADefinitionV2 | VIADefinitionV3,
-) => {
-  if ('lighting' in definition) {
-    return [];
-  }
-
-  const modules = definition.keycodes ?? [];
-  const menuIds = definition.menus.filter(
-    (menu): menu is string => typeof menu === 'string',
-  );
-  const warnings: string[] = [];
-
-  if (
-    modules.includes(BuiltInKeycodeModule.QMKLighting) &&
-    !menuIds.some((menuId) => STANDARD_LIGHTING_MENU_IDS.includes(menuId))
-  ) {
-    warnings.push(
-      'This definition uses qmk_lighting, but its lighting subsystem cannot be determined from standardized menus. On VIA protocol 13, both UG_* and RM_* keycodes will be shown. Consider using an explicit QMK lighting keycode module.',
-    );
-  }
-
-  const hasBacklightRGBLightModule = modules.includes(
-    BuiltInKeycodeModule.QMKBacklightRGBLightKeycodes,
-  );
-  const hasRGBLightModule =
-    hasBacklightRGBLightModule ||
-    modules.includes(BuiltInKeycodeModule.QMKRGBLightKeycodes);
-  const hasRGBMatrixModule = modules.includes(
-    BuiltInKeycodeModule.QMKRGBMatrixKeycodes,
-  );
-  const hasRGBLightMenu =
-    menuIds.includes('qmk_rgblight') ||
-    menuIds.includes('qmk_backlight_rgblight');
-  const hasRGBMatrixMenu = menuIds.includes('qmk_rgb_matrix');
-  const hasSubsystemMismatch =
-    (hasRGBLightMenu && hasRGBMatrixModule && !hasRGBLightModule) ||
-    (hasRGBMatrixMenu && hasRGBLightModule && !hasRGBMatrixModule);
-
-  if (hasSubsystemMismatch) {
-    warnings.push(
-      'The selected QMK lighting keycode module does not match the standardized lighting menu. Verify whether this keyboard uses RGBLight or RGB Matrix.',
-    );
-  }
-
-  return warnings;
-};
-
-// TODO: move this inside function component and then use the closured dispatch?
+// Import definitions with automatic generation detection. The explicit v2/v3
+// switch is kept only as a display filter for already-loaded drafts; a dropped
+// file is always recognised by its own shape, not by the toggle.
 function importDefinitions(
   files: File[],
-  version: DefinitionVersion,
+  _version: DefinitionVersion,
   dispatch: Dispatch<any>,
   setErrors: (errors: string[]) => void,
+  setImported: (message: string | null) => void,
 ) {
   Promise.all(files.map(makeReaderPromise)).then((results) => {
-    let errors: string[] = [];
+    const errors: string[] = [];
+    const parsed: ParsedDefinition[] = [];
     setErrors([]);
-    const definitions = results
-      .map(([fileName, result]) => {
-        if (errors.length > 0) {
-          return null;
+    setImported(null);
+
+    results.forEach(([fileName, result]) => {
+      try {
+        const definitions = parseDefinitionText(result.toString());
+        parsed.push(...definitions);
+        const notes = definitions.flatMap((entry) => entry.notes);
+        if (notes.length) {
+          setImported(`${fileName}：${Array.from(new Set(notes)).join('；')}`);
         }
-        try {
-          const res = JSON.parse(result.toString());
-          const isValid =
-            version === 'v2'
-              ? isKeyboardDefinitionV2(res) || isVIADefinitionV2(res)
-              : isKeyboardDefinitionV3(res) || isVIADefinitionV3(res);
-          if (isValid) {
-            const definition =
-              version === 'v2'
-                ? isVIADefinitionV2(res)
-                  ? res
-                  : keyboardDefinitionV2ToVIADefinitionV2(res)
-                : isVIADefinitionV3(res)
-                  ? res
-                  : keyboardDefinitionV3ToVIADefinitionV3(res);
-            return definition;
-          } else {
-            errors = (
-              version === 'v2'
-                ? isKeyboardDefinitionV2.errors ||
-                  isVIADefinitionV2.errors ||
-                  []
-                : isKeyboardDefinitionV3.errors ||
-                  isVIADefinitionV3.errors ||
-                  []
-            ).map((e) => formatDefinitionError(fileName, e));
-          }
-        } catch (err: any) {
-          if (err.name) {
-            errors.push(`${err.name}: ${err.message}`);
-          } else {
-            errors.push(`${err}`);
-          }
+      } catch (error) {
+        if (error instanceof DefinitionImportError) {
+          errors.push(`${fileName}：${error.detail}`);
+        } else if (error instanceof Error) {
+          errors.push(`${fileName}：${error.message}`);
+        } else {
+          errors.push(`${fileName}：${String(error)}`);
         }
-      })
-      .filter(isVIADefinition);
+      }
+    });
 
     if (errors.length) {
       setErrors(errors);
-    } else {
+      return;
+    }
+    if (!parsed.length) {
+      return;
+    }
+
+    (['v2', 'v3'] as DefinitionVersion[]).forEach((version) => {
+      const definitions = parsed
+        .filter((entry) => entry.version === version)
+        .map((entry) => entry.definition);
+      if (!definitions.length) {
+        return;
+      }
       dispatch(loadCustomDefinitions({definitions, version}));
       dispatch(storeCustomDefinitions({definitions, version}));
       dispatch(
         ensureSupportedIds({
-          productIds: definitions.map((d) => d.vendorProductId),
+          productIds: definitions.map((definition) => definition.vendorProductId),
           version,
         }),
       );
-      dispatch(selectDevice(null));
-      dispatch(reloadConnectedDevices());
-    }
+    });
+
+    // Show the generation we actually detected instead of making the user
+    // discover the (deprecated) toggle.
+    const firstVersion = parsed[0].version;
+    dispatch(updateDesignDefinitionVersion(firstVersion));
+    setImported(
+      `Detected ${firstVersion.toUpperCase()} definition automatically${
+        parsed.length > 1 ? ` (${parsed.length} files)` : ''
+      }`,
+    );
+    dispatch(selectDevice(null));
+    dispatch(reloadConnectedDevices());
   });
 }
 
@@ -289,6 +210,7 @@ function onDrop(
   version: DefinitionVersion,
   dispatch: Dispatch<any>,
   setErrors: (errors: string[]) => void,
+  setImported: (message: string | null) => void,
 ) {
   evt.preventDefault();
   const {dataTransfer} = evt;
@@ -300,7 +222,13 @@ function onDrop(
       .map((item) => item.getAsFile()) // Use DataTransferItemList interface to access the file(s)
       .filter((item) => item !== null);
     if (items.length) {
-      importDefinitions(items as File[], version, dispatch, setErrors);
+      importDefinitions(
+        items as File[],
+        version,
+        dispatch,
+        setErrors,
+        setImported,
+      );
     }
   }
 }
@@ -314,6 +242,7 @@ export const DesignTab: FC = () => {
   const selectedDefinitionIndex = useAppSelector(getSelectedDefinitionIndex);
   const showMatrix = useAppSelector(getShowMatrix);
   const [errors, setErrors] = useState<string[]>([]);
+  const [imported, setImported] = useState<string | null>(null);
   const versionDefinitions: DefinitionVersionMap[] = useMemo(
     () =>
       localDefinitions.filter(
@@ -331,10 +260,6 @@ export const DesignTab: FC = () => {
   const definition =
     versionDefinitions[selectedDefinitionIndex] &&
     versionDefinitions[selectedDefinitionIndex][definitionVersion];
-  const definitionWarnings = useMemo(
-    () => (definition ? getDefinitionWarnings(definition) : []),
-    [definition],
-  );
   const uploadButton = useRef<HTMLInputElement>();
   return (
     <DesignPane
@@ -370,7 +295,7 @@ export const DesignTab: FC = () => {
               uploadButton.current && uploadButton.current.click();
             }}
             onDrop={(evt) =>
-              onDrop(evt, definitionVersion, dispatch, setErrors)
+              onDrop(evt, definitionVersion, dispatch, setErrors, setImported)
             }
             onDragOver={(evt) => {
               evt.dataTransfer.effectAllowed = 'copyMove';
@@ -408,6 +333,7 @@ export const DesignTab: FC = () => {
                       definitionVersion,
                       dispatch,
                       setErrors,
+                      setImported,
                     );
                   }}
                 >
@@ -416,14 +342,9 @@ export const DesignTab: FC = () => {
               </Detail>
             </ControlRow>
             <ControlRow>
-              <Label>{t('Use V2 definitions (deprecated)')}</Label>
-              <Detail>
-                <AccentSlider
-                  isChecked={definitionVersion === 'v2'}
-                  onChange={(val) =>
-                    dispatch(updateDesignDefinitionVersion(val ? 'v2' : 'v3'))
-                  }
-                />
+              <Label>{t('Definition version')}</Label>
+              <Detail style={{fontSize: 12, color: 'var(--color_label)'}}>
+                {t('Auto-detected')} · {definitionVersion.toUpperCase()}
               </Detail>
             </ControlRow>
             {definition && (
@@ -476,11 +397,11 @@ export const DesignTab: FC = () => {
                 <DesignErrorMessage>{error}</DesignErrorMessage>
               </IndentedControlRow>
             ))}
-            {definitionWarnings.map((warning) => (
-              <IndentedControlRow key={warning}>
-                <DesignWarningMessage>{warning}</DesignWarningMessage>
+            {imported && (
+              <IndentedControlRow>
+                <DesignInfoMessage>{imported}</DesignInfoMessage>
               </IndentedControlRow>
-            ))}
+            )}
             <ControlRow>
               <Label>{t('Draft Definitions')}</Label>
               <Detail>

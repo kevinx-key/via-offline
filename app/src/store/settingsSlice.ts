@@ -12,6 +12,7 @@ import {makeSRGBTheme} from 'src/utils/keyboard-rendering';
 import {updateCSSVariables} from 'src/utils/color-math';
 import {webGLIsAvailable} from 'src/utils/test-webgl';
 import {DefinitionVersion} from '@the-via/reader';
+import {applyUiScale, canUseGlobalCapture} from 'src/utils/native';
 
 // TODO: why are these settings mixed? Is it because we only want some of them cached? SHould we rename to "CachedSettings"?
 type SettingsState = Settings & {
@@ -19,6 +20,9 @@ type SettingsState = Settings & {
   restartRequired: boolean;
   allowGlobalHotKeys: boolean;
   showDesignTabConfirmationNotice: boolean;
+  globalCaptureEnabled: boolean;
+  globalCaptureSupported: boolean;
+  globalCaptureError: string | null;
 };
 
 const initialState: SettingsState = {
@@ -27,6 +31,9 @@ const initialState: SettingsState = {
   restartRequired: false,
   allowGlobalHotKeys: false,
   showDesignTabConfirmationNotice: false,
+  globalCaptureEnabled: false,
+  globalCaptureSupported: canUseGlobalCapture,
+  globalCaptureError: null,
 };
 
 const toggleBool = (
@@ -88,6 +95,27 @@ const settingsSlice = createSlice({
       updateCSSVariables(state.themeName as keyof typeof THEMES);
       setSettings(state);
     },
+    setThemeMode: (state, action: PayloadAction<'light' | 'dark'>) => {
+      state.themeMode = action.payload;
+      document.documentElement.dataset.themeMode = action.payload;
+      // Tie the keycap palette to the day/night reference photos: 山紫云白
+      // for light, ERROR! for dark. The user can still pick another keycap
+      // theme afterwards in Settings.
+      state.themeName = action.payload === 'light' ? 'OLIVIA' : 'ERROR';
+      updateCSSVariables(state.themeName as keyof typeof THEMES);
+      setSettings(state);
+    },
+    setUiScale: (state, action: PayloadAction<number>) => {
+      state.uiScale = Math.min(1.5, Math.max(0.75, action.payload));
+      applyUiScale(state.uiScale);
+      setSettings(state);
+    },
+    setGlobalCaptureEnabled: (state, action: PayloadAction<boolean>) => {
+      state.globalCaptureEnabled = action.payload;
+    },
+    setGlobalCaptureError: (state, action: PayloadAction<string | null>) => {
+      state.globalCaptureError = action.payload;
+    },
     setTestMatrixEnabled: (state, action: PayloadAction<boolean>) => {
       state.isTestMatrixEnabled = action.payload;
     },
@@ -137,6 +165,10 @@ export const {
   setTestKeyboardSoundsSettings,
   setMacroEditorSettings,
   toggleThemeMode,
+  setThemeMode,
+  setUiScale,
+  setGlobalCaptureEnabled,
+  setGlobalCaptureError,
   disableGlobalHotKeys,
   enableGlobalHotKeys,
   updateRenderMode,
@@ -173,6 +205,13 @@ export const getRenderMode = (state: RootState) =>
   webGLIsAvailable ? state.settings.renderMode : '2D';
 export const getThemeMode = (state: RootState) => state.settings.themeMode;
 export const getThemeName = (state: RootState) => state.settings.themeName;
+export const getUiScale = (state: RootState) => state.settings.uiScale;
+export const getGlobalCaptureEnabled = (state: RootState) =>
+  state.settings.globalCaptureEnabled;
+export const getGlobalCaptureSupported = (state: RootState) =>
+  state.settings.globalCaptureSupported;
+export const getGlobalCaptureError = (state: RootState) =>
+  state.settings.globalCaptureError;
 export const getSelectedTheme = createSelector(getThemeName, (themeName) => {
   return THEMES[themeName as keyof typeof THEMES];
 });

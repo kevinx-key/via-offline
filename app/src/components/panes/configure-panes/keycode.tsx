@@ -48,29 +48,28 @@ import {getNextKey} from 'src/utils/keyboard-rendering';
 import {useTranslation} from 'react-i18next';
 const KeycodeList = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, 64px);
-  grid-auto-rows: 64px;
+  grid-template-columns: repeat(auto-fill, 56px);
+  grid-auto-rows: 56px;
   justify-content: center;
-  grid-gap: 10px;
+  grid-gap: 7px;
 `;
 
 const MenuContainer = styled.div`
-  padding: 15px 20px 20px 10px;
+  padding: 12px 14px 16px 8px;
 `;
 
 const Keycode = styled(Button)<{disabled: boolean}>`
-  width: 50px;
-  height: 50px;
-  line-height: 18px;
-  border-radius: 64px;
-  font-size: 14px;
-  border: 4px solid var(--border_color_icon);
+  width: 44px;
+  height: 44px;
+  line-height: 14px;
+  font-size: 11.5px;
+  border: 1px solid var(--border_color_icon);
   background: var(--bg_control);
   color: var(--color_label-highlighted);
   margin: 0;
   box-shadow: none;
   position: relative;
-  border-radius: 10px;
+  border-radius: 9px;
   &:hover {
     border-color: var(--color_accent);
     transform: translate3d(0, -2px, 0);
@@ -84,12 +83,12 @@ const KeycodeContent = styled.div`
 `;
 
 const CustomKeycode = styled(Button)`
-  width: 50px;
-  height: 50px;
-  line-height: 18px;
-  border-radius: 10px;
-  font-size: 14px;
-  border: 4px solid var(--border_color_icon);
+  width: 44px;
+  height: 44px;
+  line-height: 14px;
+  border-radius: 9px;
+  font-size: 11.5px;
+  border: 1px solid var(--border_color_icon);
   background: var(--color_accent);
   border-color: var(--color_inside_accent);
   color: var(--color_inside_accent);
@@ -108,11 +107,11 @@ const KeycodeDesc = styled.div`
   color: var(--color_label-highlighted);
   box-sizing: border-box;
   transition: opacity 0.4s ease-out;
-  height: 25px;
+  height: 24px;
   width: 100%;
   line-height: 14px;
-  padding: 5px;
-  font-size: 14px;
+  padding: 5px 10px;
+  font-size: 11.5px;
   opacity: 1;
   pointer-events: none;
   &:empty {

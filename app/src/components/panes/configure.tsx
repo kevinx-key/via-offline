@@ -34,37 +34,33 @@ import {
   setConfigureKeyboardIsSelectable,
 } from 'src/store/keymapSlice';
 import {useDispatch} from 'react-redux';
-import {reloadConnectedDevices} from 'src/store/devicesThunks';
+import {requestDeviceFromUser} from 'src/store/devicesThunks';
 import {getV3MenuComponents} from 'src/store/menusSlice';
 import {getIsMacroFeatureSupported} from 'src/store/macrosSlice';
 import {getConnectedDevices, getSupportedIds} from 'src/store/devicesSlice';
-import {isElectron} from 'src/utils/running-context';
 import {useAppDispatch} from 'src/store/hooks';
 import {MenuTooltip} from '../inputs/tooltip';
 import {getRenderMode, getSelectedTheme} from 'src/store/settingsSlice';
 import {useTranslation} from 'react-i18next';
 
 const MenuContainer = styled.div`
-  padding: 15px 10px 20px 10px;
+  padding: 12px 6px 18px 6px;
 `;
 
 const BadgeRow = styled.div`
   position: absolute;
-  top: 0;
-  right: 15px;
+  top: 8px;
+  right: 14px;
 
   display: flex;
   flex-direction: row;
   align-items: flex-start;
 
-  /*
-   * Constant distance between the host-layout selector
-   * and the connected keyboard name.
-   */
-  gap: 10px;
+  gap: 8px;
 
   pointer-events: none;
   white-space: nowrap;
+  z-index: 5;
 `;
 
 const Rows = [
@@ -201,9 +197,12 @@ const Loader: React.FC<{
     <LoaderPane>
       {<ChippyLoader theme={theme} progress={loadProgress || null} />}
 
-      {(showButton || noConnectedDevices) && !noSupportedIds && !isElectron ? (
-        <AccentButtonLarge onClick={() => dispatch(reloadConnectedDevices())}>
-          {t('Authorize device')}
+      {(showButton || noConnectedDevices) && !noSupportedIds ? (
+        <AccentButtonLarge
+          onClick={() => dispatch(requestDeviceFromUser())}
+          style={{minWidth: 160}}
+        >
+          {t('Choose keyboard')}
           <FontAwesomeIcon style={{marginLeft: '10px'}} icon={faPlus} />
         </AccentButtonLarge>
       ) : (

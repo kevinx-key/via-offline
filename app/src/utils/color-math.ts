@@ -3,12 +3,15 @@ import {THEMES} from 'src/utils/themes';
 export const updateCSSVariables = (themeName: keyof typeof THEMES) => {
   const selectedTheme = THEMES[themeName] || THEMES['OLIVIA_DARK'];
 
+  // Keep the UI accent (blue in both day/night themes) separate from the
+  // keycap palette. Overwriting --color_accent here made the whole app turn
+  // purple/red when the user picked 山紫云白 or ERROR! keycaps.
   document.documentElement.style.setProperty(
-    '--color_accent',
+    '--keycap_color_accent',
     selectedTheme.accent.c,
   );
   document.documentElement.style.setProperty(
-    '--color_inside-accent',
+    '--keycap_color_inside_accent',
     selectedTheme.accent.t,
   );
 };

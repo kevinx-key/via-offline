@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>选择键盘</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f5f5f7;
+        --surface: #ffffff;
+        --surface-2: #fafafc;
+        --border: #d2d2d7;
+        --text: #1d1d1f;
+        --muted: #6e6e73;
+        --accent: #0071e3;
+        --accent-soft: rgba(0, 113, 227, 0.1);
+        --danger: #ff3b30;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1117;
+          --surface: #161b22;
+          --surface-2: #1c2128;
+          --border: #30363d;
+          --text: #c9d1d9;
+          --muted: #8b949e;
+          --accent: #58a6ff;
+          --accent-soft: rgba(88, 166, 255, 0.12);
+          --danger: #f85149;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+        font-size: 13px;
+      }
+      .wrap { display: flex; flex-direction: column; height: 100vh; }
+      header { padding: 18px 20px 12px; }
+      h1 { margin: 0 0 4px; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+      .sub { color: var(--muted); font-size: 12px; line-height: 1.5; }
+      .search { padding: 0 20px 10px; }
+      input {
+        width: 100%; height: 34px; padding: 0 11px;
+        border: 1px solid var(--border); border-radius: 8px;
+        background: var(--surface); color: var(--text); font: inherit; outline: none;
+      }
+      input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+      .list { flex: 1; overflow: auto; padding: 0 12px 12px; }
+      .device {
+        display: flex; align-items: center; gap: 12px;
+        width: 100%; text-align: left; padding: 11px 12px; margin: 4px 0;
+        border: 1px solid transparent; border-radius: 10px;
+        background: var(--surface); color: var(--text); font: inherit; cursor: pointer;
+      }
+      .device:hover { background: var(--surface-2); border-color: var(--border); }
+      .device[aria-selected="true"] { border-color: var(--accent); background: var(--accent-soft); }
+      .icon {
+        width: 34px; height: 34px; flex: none; border-radius: 9px;
+        background: var(--surface-2); border: 1px solid var(--border);
+        display: grid; place-items: center; font-size: 17px;
+      }
+      .meta { min-width: 0; flex: 1; }
+      .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .ids { color: var(--muted); font-family: "Cascadia Mono", Consolas, monospace; font-size: 11px; margin-top: 3px; }
+      .empty { color: var(--muted); text-align: center; padding: 44px 20px; line-height: 1.7; }
+      footer {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        padding: 12px 20px 16px; border-top: 1px solid var(--border); background: var(--surface);
+      }
+      .hint { color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+      .actions { display: flex; gap: 8px; }
+      button {
+        height: 34px; padding: 0 16px; border-radius: 8px; font: inherit; font-weight: 500;
+        border: 1px solid var(--border); background: var(--surface-2); color: var(--text); cursor: pointer;
+      }
+      button:hover { border-color: var(--accent); }
+      button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+      button.primary:disabled { opacity: 0.45; cursor: not-allowed; }
+      button.ghost { background: transparent; }
+      .error { color: var(--danger); }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1 id="picker-title">选择键盘</h1>
+        <div class="sub" id="picker-sub">这里列出系统报告的全部 HID 设备。优先选择键盘；如果它没有 VIA / QMK Raw HID 接口，连接后会给出提示。</div>
+      </header>
+      <div class="search"><input id="search" type="search" placeholder="搜索设备名称、VID 或 PID…" autocomplete="off" /></div>
+      <div class="list" id="list" role="listbox" aria-label="HID 设备"></div>
+      <footer>
+        <div class="hint" id="hint">连接后会自动记住这个设备。</div>
+        <div class="actions">
+          <button class="ghost" id="rescan">重新扫描</button>
+          <button class="ghost" id="cancel">取消</button>
+          <button class="primary" id="connect" disabled>连接</button>
+        </div>
+      </footer>
+    </div>
+    <script>
+      const listEl = document.getElementById('list');
+      const hintEl = document.getElementById('hint');
+      const searchEl = document.getElementById('search');
+      const connectEl = document.getElementById('connect');
+      const zh = new URLSearchParams(location.search).get('lang') === 'zh';
+      const tr = (cn, en) => (zh ? cn : en);
+      document.title = tr('选择键盘', 'Select keyboard');
+      document.getElementById('picker-title').textContent = tr('选择键盘', 'Select keyboard');
+      document.getElementById('picker-sub').textContent = tr(
+        '这里列出系统报告的全部 HID 设备。优先选择键盘；如果它没有 VIA / QMK Raw HID 接口，连接后会给出提示。',
+        'All HID devices reported by the system are listed here. Prefer a keyboard; if it has no VIA / QMK Raw HID interface, you will be told after connecting.',
+      );
+      searchEl.placeholder = tr('搜索设备名称、VID 或 PID…', 'Search name, VID or PID…');
+      document.getElementById('rescan').textContent = tr('重新扫描', 'Rescan');
+      document.getElementById('cancel').textContent = tr('取消', 'Cancel');
+      connectEl.textContent = tr('连接', 'Connect');
+      hintEl.textContent = tr(
+        '连接后会自动记住这个设备；没看到键盘时点“重新扫描”。',
+        'This device will be remembered; use “Rescan” if your keyboard is missing.',
+      );
+      let devices = [];
+      let selected = null;
+
+      const hex = (value, width) => {
+        const n = Number(value);
+        if (!Number.isFinite(n)) return '—';
+        return '0x' + n.toString(16).toUpperCase().padStart(width, '0');
+      };
+
+      function render() {
+        const query = searchEl.value.trim().toLowerCase();
+        const filtered = devices.filter((device) => {
+          const haystack = [device.name, hex(device.vendorId, 4), hex(device.productId, 4), device.serialNumber]
+            .filter(Boolean).join(' ').toLowerCase();
+          return !query || haystack.includes(query);
+        });
+        listEl.textContent = '';
+        if (!filtered.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = devices.length
+            ? tr('没有匹配的设备。', 'No matching device.')
+            : tr(
+                '系统没有报告任何 HID 设备。请确认键盘已插好，换一个 USB 口或数据线重试。',
+                'The system did not report any HID device. Check the keyboard and try another USB port or cable.',
+              );
+          listEl.appendChild(empty);
+          return;
+        }
+        filtered.forEach((device) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'device';
+          button.setAttribute('role', 'option');
+          button.setAttribute('aria-selected', String(selected === device.deviceId));
+          button.dataset.id = device.deviceId;
+
+          const icon = document.createElement('span');
+          icon.className = 'icon';
+          icon.textContent = '⌨';
+
+          const meta = document.createElement('span');
+          meta.className = 'meta';
+          const name = document.createElement('div');
+          name.className = 'name';
+          name.textContent = device.name || '未命名 HID 设备';
+          const ids = document.createElement('div');
+          ids.className = 'ids';
+          ids.textContent =
+            `VID ${hex(device.vendorId, 4)}  ·  PID ${hex(device.productId, 4)}` +
+            (device.serialNumber ? `  ·  ${device.serialNumber}` : '');
+          meta.append(name, ids);
+          button.append(icon, meta);
+          button.addEventListener('click', () => {
+            selected = device.deviceId;
+            render();
+          });
+          button.addEventListener('dblclick', () => {
+            selected = device.deviceId;
+            choose();
+          });
+          listEl.appendChild(button);
+        });
+      }
+
+      async function choose() {
+        if (!selected) return;
+        connectEl.disabled = true;
+        try {
+          await window.hidPicker.choose(selected);
+        } catch (error) {
+          hintEl.textContent = tr('连接失败：', 'Connection failed: ') + error.message;
+          hintEl.className = 'hint error';
+          connectEl.disabled = false;
+        }
+      }
+
+      connectEl.addEventListener('click', choose);
+      document.getElementById('rescan').addEventListener('click', () => window.hidPicker.rescan());
+      document.getElementById('cancel').addEventListener('click', () => window.hidPicker.cancel());
+      searchEl.addEventListener('input', render);
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') window.hidPicker.cancel();
+        if (event.key === 'Enter') choose();
+      });
+
+      window.hidPicker.list().then((items) => {
+        devices = Array.isArray(items) ? items : [];
+        if (devices.length === 1) selected = devices[0].deviceId;
+        render();
+        connectEl.disabled = !selected;
+        searchEl.focus();
+      });
+      const observer = new MutationObserver(() => {
+        connectEl.disabled = !selected;
+      });
+      observer.observe(listEl, {childList: true});
+    </script>
+  </body>
+</html>

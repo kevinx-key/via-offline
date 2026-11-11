@@ -2,7 +2,6 @@ import React, {useMemo, useState} from 'react';
 import styled from 'styled-components';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faAngleDown, faPlus} from '@fortawesome/free-solid-svg-icons';
-import {HID} from '../../../shims/node-hid';
 import type {VIADefinitionV2, VIADefinitionV3} from '@the-via/reader';
 import type {ConnectedDevice} from '../../../types/types';
 import {useAppDispatch, useAppSelector} from 'src/store/hooks';
@@ -14,8 +13,10 @@ import {
   getConnectedDevices,
   getSelectedDevicePath,
 } from 'src/store/devicesSlice';
-import {selectConnectedDeviceByPath} from 'src/store/devicesThunks';
-import {isElectron} from 'src/utils/running-context';
+import {
+  requestDeviceFromUser,
+  selectConnectedDeviceByPath,
+} from 'src/store/devicesThunks';
 import {useTranslation} from 'react-i18next';
 import {
   getConnectedDefinitionNames,
@@ -24,49 +25,51 @@ import {
 
 const Container = styled.div`
   position: relative;
-  font-size: 18px;
+  font-size: 12px;
   pointer-events: none;
-  font-weight: 400;
+  font-weight: 500;
   flex: 0 0 auto;
 `;
 
 const KeyboardTitle = styled.label`
   pointer-events: all;
-  display: inline-block;
-  background: var(--color_accent);
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
-  font-size: 18px;
-  text-transform: uppercase;
-  color: var(--color_inside-accent);
-  padding: 1px 10px;
-  border: solid 1px var(--bg_control);
-  border-top: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg_menu);
+  border-radius: 9px;
+  font-size: 12px;
+  color: var(--color_label-highlighted);
+  padding: 6px 10px;
+  border: 1px solid var(--border_color_cell);
   cursor: pointer;
-  transition: all 0.1s ease-out;
+  transition: all 0.16s ease;
   white-space: nowrap;
+  box-shadow: var(--shadow-1);
 
   &:hover {
-    filter: brightness(0.7);
+    border-color: var(--color_accent);
+    color: var(--color_accent);
   }
 `;
 
 const KeyboardList = styled.ul<{$show: boolean}>`
-  padding: 0;
-  border: 1px solid var(--bg_control);
-  width: 160px;
-  border-radius: 6px;
+  padding: 5px;
+  border: 1px solid var(--border_color_cell);
+  width: 190px;
+  border-radius: 10px;
   background-color: var(--bg_menu);
+  box-shadow: var(--shadow-2);
   margin: 0;
-  margin-top: 5px;
+  margin-top: 6px;
   right: 0;
   position: absolute;
   pointer-events: ${(props) => (props.$show ? 'all' : 'none')};
   transition: all 0.2s ease-out;
-  z-index: 11;
+  z-index: 41;
   opacity: ${(props) => (props.$show ? 1 : 0)};
   overflow: hidden;
-  transform: ${(props) => (props.$show ? 0 : `translateY(-5px)`)};
+  transform: ${(props) => (props.$show ? 'translateY(0)' : `translateY(-5px)`)};
 `;
 
 const KeyboardButton = styled.button<{$selected?: boolean}>`
@@ -78,17 +81,17 @@ const KeyboardButton = styled.button<{$selected?: boolean}>`
   text-overflow: ellipsis;
   width: 100%;
   border: none;
+  border-radius: 7px;
   background: ${(props) =>
-    props.$selected ? 'var(--bg_icon-highlighted)' : 'transparent'};
+    props.$selected ? 'var(--bg_accent-soft)' : 'transparent'};
   color: ${(props) =>
     props.$selected
-      ? 'var(--color_icon_highlighted)'
+      ? 'var(--color_accent)'
       : 'var(--color_label-highlighted)'};
   cursor: pointer;
   text-align: left;
-  font-size: 14px;
-  text-transform: uppercase;
-  padding: 5px 10px;
+  font-size: 12px;
+  padding: 7px 8px;
 
   &:hover {
     border: none;
@@ -128,12 +131,11 @@ const KeyboardSelectors: React.FC<{
 }> = (props) => {
   const {t} = useTranslation();
 
-  const requestAndChangeDevice = async () => {
-    const device = await HID.requestDevice();
+  const dispatch = useAppDispatch();
 
-    if (device) {
-      props.selectKeyboard((device as any).__path);
-    }
+  const requestAndChangeDevice = async () => {
+    props.onClickOut();
+    await dispatch(requestDeviceFromUser());
   };
 
   return (
@@ -153,12 +155,10 @@ const KeyboardSelectors: React.FC<{
           );
         })}
 
-        {!isElectron && (
-          <KeyboardButton onClick={requestAndChangeDevice}>
-            {t('Authorize New')}
-            <FontAwesomeIcon icon={faPlus} style={{marginLeft: '10px'}} />
-          </KeyboardButton>
-        )}
+        <KeyboardButton onClick={requestAndChangeDevice}>
+          {t('Choose keyboard')}
+          <FontAwesomeIcon icon={faPlus} style={{marginLeft: '8px'}} />
+        </KeyboardButton>
       </KeyboardList>
     </>
   );

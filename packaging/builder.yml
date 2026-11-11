@@ -11,12 +11,18 @@ directories:
 files:
   - main.js
   - server.js
+  - preload.js
+  - global-capture.js
+  - hid-picker.html
+  - hid-picker-preload.js
+  - keyhook.bin
   - icon.png
   - NOTICE.txt
   - LICENSE
   - dist/**/*
 
-compression: maximum
+asar: true
+compression: normal
 
 win:
   target:
@@ -24,6 +30,10 @@ win:
       arch: [x64]
   icon: icon.ico
   artifactName: ${productName}-${version}-win-x64.${ext}
+
+portable:
+  splashImage: splash.bmp
+  unpackDirName: false
 
 mac:
   target:

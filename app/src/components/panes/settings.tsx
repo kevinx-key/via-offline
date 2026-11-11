@@ -25,11 +25,13 @@ import {
   toggleFastRemap,
   updateShowSliderValuesMode,
   getThemeMode,
-  toggleThemeMode,
+  setThemeMode,
   getThemeName,
   updateThemeName,
   getRenderMode,
   updateRenderMode,
+  getUiScale,
+  setUiScale,
   setShowDesignTabConfirmationNotice,
 } from 'src/store/settingsSlice';
 import {AccentSelect} from '../inputs/accent-select';
@@ -59,6 +61,35 @@ const DiagnosticContainer = styled(Container)`
 const SettingsErrorMessage = styled(ErrorMessage)`
   margin: 0;
   font-style: italic;
+  font-size: 12px;
+`;
+
+const ThemeButtons = styled.div`
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--bg_control);
+  border: 1px solid var(--border_color_cell);
+
+  button {
+    height: 26px;
+    min-width: 58px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--color_label);
+    background: transparent;
+  }
+  button.selected {
+    background: var(--bg_menu);
+    color: var(--color_label-highlighted);
+    box-shadow: var(--shadow-1);
+  }
 `;
 
 export const Settings = () => {
@@ -73,6 +104,7 @@ export const Settings = () => {
   const ShowSliderValuesMode = useAppSelector(getShowSliderValuesMode);
   const themeMode = useAppSelector(getThemeMode);
   const themeName = useAppSelector(getThemeName);
+  const uiScale = useAppSelector(getUiScale);
   const renderMode = useAppSelector(getRenderMode);
   const selectedDevice = useAppSelector(getSelectedConnectedDevice);
 
@@ -129,6 +161,14 @@ export const Settings = () => {
   const renderModeDefaultValue = renderModeOptions.find(
     (opt) => opt.value === renderMode,
   );
+
+  const uiScaleOptions = [0.8, 0.9, 1, 1.1, 1.25].map((value) => ({
+    label: `${Math.round(value * 100)}%`,
+    value,
+  }));
+  const uiScaleDefaultValue = uiScaleOptions.find(
+    (opt) => Math.abs(opt.value - (uiScale || 1)) < 0.001,
+  );
   return (
     <Pane>
       <Grid style={{overflow: 'hidden'}}>
@@ -184,11 +224,34 @@ export const Settings = () => {
               </Detail>
             </ControlRow>
             <ControlRow>
-              <Label>{t('Light Mode')}</Label>
+              <Label>{t('Appearance')}</Label>
               <Detail>
-                <AccentSlider
-                  onChange={() => dispatch(toggleThemeMode())}
-                  isChecked={themeMode === 'light'}
+                <ThemeButtons>
+                  <button
+                    className={themeMode === 'dark' ? 'selected' : ''}
+                    onClick={() => dispatch(setThemeMode('dark'))}
+                  >
+                    {t('Dark')}
+                  </button>
+                  <button
+                    className={themeMode === 'light' ? 'selected' : ''}
+                    onClick={() => dispatch(setThemeMode('light'))}
+                  >
+                    {t('Light')}
+                  </button>
+                </ThemeButtons>
+              </Detail>
+            </ControlRow>
+            <ControlRow>
+              <Label>{t('Interface scale')}</Label>
+              <Detail>
+                <AccentSelect
+                  isSearchable={false}
+                  defaultValue={uiScaleDefaultValue}
+                  options={uiScaleOptions}
+                  onChange={(option: any) => {
+                    option && dispatch(setUiScale(option.value));
+                  }}
                 />
               </Detail>
             </ControlRow>

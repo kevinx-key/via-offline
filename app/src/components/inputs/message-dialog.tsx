@@ -32,7 +32,9 @@ export const MessageDialog: React.FC<
     isOpen: boolean;
     onConfirm?(): void;
     onCancel?(): void;
+    onSecondary?(): void;
     confirmLabel?: string;
+    secondaryLabel?: string;
   }>
 > = (props) => {
   const {t} = useTranslation();
@@ -64,7 +66,17 @@ export const MessageDialog: React.FC<
     >
       <ModalContainer>
         <PromptText>{props.children}</PromptText>
-        <Controls>
+        <Controls style={{gap: 8}}>
+          {props.secondaryLabel && props.onSecondary && (
+            <AccentButton
+              onClick={() => {
+                props.onSecondary?.();
+                closeModal();
+              }}
+            >
+              {t(props.secondaryLabel)}
+            </AccentButton>
+          )}
           <AccentButton
             onClick={() => {
               props.onConfirm?.();

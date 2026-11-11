@@ -38,6 +38,9 @@ export const TestOverlay = styled.div`
 
 export const CanvasContainerBG = styled.div<{}>``;
 export const CanvasContainer = styled.div<{}>`
-  box-shadow: inset -1px -1px 0 rgb(0 0 0 / 20%),
-    inset 1px 1px 0 rgb(255 255 255 / 10%);
+  border-radius: 5px;
+  box-shadow:
+    inset 0 1px 0 var(--keycap-face-highlight),
+    inset 0 -1px 0 var(--keycap-face-shadow),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 `;

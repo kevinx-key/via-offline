@@ -37,6 +37,7 @@ import {AccentSelect} from '../inputs/accent-select';
 import {AccentRange} from '../inputs/accent-range';
 import {TestKeyboardSoundsMode} from '../void/test-keyboard-sounds';
 import {useTranslation} from 'react-i18next';
+import {GlobalCapturePanel} from '../test/global-capture-panel';
 
 const Container = styled.div`
   display: flex;
@@ -139,6 +140,7 @@ export const Test: FC = () => {
         </MenuCell>
         <SpanOverflowCell>
           <Container>
+            <GlobalCapturePanel />
             <ControlRow>
               <Label>{t('Reset Keyboard')}</Label>
               <Detail>

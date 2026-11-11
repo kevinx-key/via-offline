@@ -34,8 +34,9 @@ const defaultStoreData = {
     ShowSliderValuesMode: 'Slider Only' as const,
     renderMode: '2D' as const,
     themeMode: 'dark' as const,
+    uiScale: 1,
     designDefinitionVersion: 'v3' as const,
-    themeName: 'OLIVIA_DARK',
+    themeName: 'ERROR',
     hostKeyboardLayout: 'keymap_us',
     macroEditor: {
       smartOptimizeEnabled: true,
@@ -54,6 +55,32 @@ const defaultStoreData = {
 
 function initDeviceStore() {
   deviceStore = new Store(defaultStoreData);
+  // One-time appearance migration from the 1.0.x build: its default keycap
+  // palette (OLIVIA_DARK) predates the new light/dark design. Keep explicit
+  // non-default choices untouched.
+  try {
+    const settings = deviceStore.get('settings');
+    const migrated = localStorage.getItem('kstar-ui-migrated-v5');
+    if (!migrated) {
+      const previousDefaults = [
+        'OLIVIA_DARK',
+        'STARTHOCK_DARK',
+        'STARTHOCK_LIGHT',
+        'SHANZI_LIGHT',
+        'ERROR_DARK',
+        'ZIYUN',
+      ];
+      if (previousDefaults.includes(settings?.themeName)) {
+        deviceStore.set('settings', {
+          ...settings,
+          themeName: settings.themeMode === 'light' ? 'OLIVIA' : 'ERROR',
+        });
+      }
+    }
+    localStorage.setItem('kstar-ui-migrated-v5', '1');
+  } catch {
+    // ignore storage issues
+  }
 }
 
 initDeviceStore();
@@ -124,6 +151,9 @@ export const getMissingDefinition = async <
   const vpid = getVendorProductId(device.vendorId, device.productId);
   const url = `/definitions/${version}/${vpid}.json`;
   const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} for ${url}`);
+  }
   const json: DefinitionVersionMap[K] = await response.json();
   let definitions = deviceStore.get('definitions');
   const newDefinitions = {
@@ -150,6 +180,28 @@ export const getMissingDefinition = async <
     });
   }
   return [json, version];
+};
+
+/**
+ * Fetch the definition a device asks for, then fall back to the other
+ * generation. Old firmwares (protocol < 11) ask for v2, but plenty of modern
+ * boards only ship a v2 definition, and vice versa. Recognition should not
+ * depend on the user manually flipping a compatibility switch.
+ */
+export const getMissingDefinitionWithFallback = async (
+  device: AuthorizedDevice,
+  preferred: 'v2' | 'v3',
+): Promise<[DefinitionVersionMap['v2'] | DefinitionVersionMap['v3'], 'v2' | 'v3']> => {
+  const order: ('v2' | 'v3')[] = preferred === 'v2' ? ['v2', 'v3'] : ['v3', 'v2'];
+  const failures: string[] = [];
+  for (const version of order) {
+    try {
+      return await getMissingDefinition(device, version);
+    } catch (error) {
+      failures.push(`${version}: ${error instanceof Error ? error.message : error}`);
+    }
+  }
+  throw new Error(failures.join('；'));
 };
 
 export const getSupportedIdsFromStore = (): VendorProductIdMap =>
@@ -183,4 +235,3 @@ export const getSettings = (): Settings => deviceStore.get('settings');
 export const setSettings = (settings: Settings) => {
   deviceStore.set('settings', current(settings));
 };
-

@@ -16,13 +16,22 @@ type InputReportHandler = (message: Uint8Array) => boolean;
 const inputReportHandlers: {
   [path: string]: InputReportHandler[];
 } = {};
-const filterHIDDevices = (devices: HIDDevice[]) =>
-  devices.filter((device) =>
-    device.collections?.some(
-      (collection) =>
-        collection.usage === 0x61 && collection.usagePage === 0xff60,
-    ),
+/** WebHID only exposes top-level collections; VIA's raw HID interface is often
+ * nested one level down (especially on wireless receivers and composite
+ * devices). Walk `children` instead of only checking the first level. */
+export const hasCollection = (
+  collections: HIDCollectionInfo[] | undefined,
+  usagePage: number,
+  usage: number,
+): boolean =>
+  !!collections?.some(
+    (collection) =>
+      (collection.usagePage === usagePage && collection.usage === usage) ||
+      hasCollection(collection.children, usagePage, usage),
   );
+
+const filterHIDDevices = (devices: HIDDevice[]) =>
+  devices.filter((device) => hasCollection(device.collections, 0xff60, 0x61));
 
 export const QMK_CONSOLE_FILTER = {
   usagePage: 0xff31,
@@ -30,11 +39,11 @@ export const QMK_CONSOLE_FILTER = {
 };
 
 export const isQMKConsoleDevice = (device: HIDDevice) =>
-  device.collections?.some(
-    (collection) =>
-      collection.usage === QMK_CONSOLE_FILTER.usage &&
-      collection.usagePage === QMK_CONSOLE_FILTER.usagePage,
-  ) ?? false;
+  hasCollection(
+    device.collections,
+    QMK_CONSOLE_FILTER.usagePage,
+    QMK_CONSOLE_FILTER.usage,
+  );
 
 const getVIAPathIdentifier = () =>
   (self.crypto && self.crypto.randomUUID && self.crypto.randomUUID()) ||
@@ -69,19 +78,35 @@ export const tryForgetDevice = (device: ConnectedDevice | AuthorizedDevice) => {
 
 const ExtendedHID = {
   _cache: {} as {[key: string]: WebVIADevice},
-  requestDevice: async () => {
+  requestDevice: async (showAll = true) => {
     const requestedDevice = await navigator.hid.requestDevice({
-      filters: [
-        {
-          usagePage: 0xff60,
-          usage: 0x61,
-        },
-        QMK_CONSOLE_FILTER,
-      ],
+      // An empty filter list asks the picker to show every HID device, which
+      // is the escape hatch for boards whose raw-HID usage is non-standard or
+      // nested. The browser/Electron picker still lets the user cancel.
+      filters: showAll
+        ? []
+        : [
+            {
+              usagePage: 0xff60,
+              usage: 0x61,
+            },
+            QMK_CONSOLE_FILTER,
+          ],
     });
-    const viaDevices = filterHIDDevices(requestedDevice);
-    viaDevices.forEach(tagDevice);
-    return viaDevices[0];
+    const viaDevices: WebVIADevice[] = filterHIDDevices(requestedDevice).map(
+      tagDevice,
+    );
+    if (viaDevices.length) {
+      return viaDevices[0];
+    }
+    if (requestedDevice.length) {
+      // The user chose a real HID device, but it has no VIA raw-HID
+      // collection. Return it anyway; the protocol probe will fail and the UI
+      // can explain that this device is not a VIA keyboard instead of leaving
+      // the click with no reaction.
+      return tagDevice(requestedDevice[0]);
+    }
+    return undefined;
   },
   getFilteredDevices: async () => {
     try {
@@ -91,18 +116,11 @@ const ExtendedHID = {
       return [];
     }
   },
-  devices: async (requestAuthorize = false) => {
-    let devices = await ExtendedHID.getFilteredDevices();
-    // TODO: This is a hack to avoid spamming the requestDevices popup
-    if (devices.length === 0 || requestAuthorize) {
-      try {
-        await ExtendedHID.requestDevice();
-      } catch (e) {
-        // The request seems to fail when the last authorized device is disconnected.
-        return [];
-      }
-      devices = await ExtendedHID.getFilteredDevices();
-    }
+  devices: async (_requestAuthorize = false) => {
+    // Never prompt here. Permission is requested only by an explicit user
+    // click (`requestDevice` / `requestDeviceFromUser`), otherwise every USB
+    // event or rescan would reopen the chooser.
+    const devices = await ExtendedHID.getFilteredDevices();
     return devices.map(tagDevice);
   },
   HID: class HID {

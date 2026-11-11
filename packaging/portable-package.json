@@ -1,7 +1,7 @@
 {
   "name": "via-offline-ks",
   "productName": "VIA-Offline-KS",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Offline VIA build (K-STAR, unofficial)",
   "author": "K Star Studio",
   "license": "GPL-3.0",
@@ -13,6 +13,7 @@
     "appId": "studio.kstar.via.offline",
     "productName": "VIA-Offline-KS",
     "electronVersion": "33.4.11",
+    "asar": true,
     "directories": {
       "output": "out",
       "buildResources": "."
@@ -20,12 +21,17 @@
     "files": [
       "main.js",
       "server.js",
+      "preload.js",
+      "global-capture.js",
+      "hid-picker.html",
+      "hid-picker-preload.js",
+      "keyhook.bin",
       "icon.png",
       "NOTICE.txt",
       "LICENSE",
       "dist/**/*"
     ],
-    "compression": "maximum",
+    "compression": "normal",
     "win": {
       "target": [
         {
@@ -36,10 +42,10 @@
       "icon": "icon.ico"
     },
     "portable": {
-      "artifactName": "VIA-Offline-KS-${version}.exe",
-      "requestExecutionLevel": "user"
+      "artifactName": "VIA-Offline-KS-${version}-win-x64.exe",
+      "requestExecutionLevel": "user",
+      "splashImage": "splash.bmp",
+      "unpackDirName": false
     }
   }
 }
-
-

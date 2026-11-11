@@ -28,7 +28,7 @@ export const MenuCell = styled(Cell)`
 
   width: fit-content;
 
-  padding-right: 8px;
+  padding: 0 6px 0 0;
 
   > * {
     direction: ltr;
@@ -74,20 +74,25 @@ export const ConfigureFlexCell = styled(SinglePaneFlexCell)`
 
 export const CategoryIconContainer = styled.span<{$selected?: boolean}>`
   position: relative;
-  color: var(--color_inside-accent);
-  height: 35px;
+  color: ${(props) =>
+    props.$selected ? 'var(--color_accent)' : 'var(--color_label)'};
+  height: 34px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   background: ${(props) =>
-    props.$selected ? 'var(--color_accent)' : 'transparent'};
-  border-radius: 10px;
-  width: 40px;
+    props.$selected ? 'var(--bg_accent-soft)' : 'transparent'};
+  border: 1px solid
+    ${(props) => (props.$selected ? 'var(--border_accent-soft)' : 'transparent')};
+  border-radius: 9px;
+  width: 34px;
+  font-size: 14px;
+  transition: all 0.16s ease;
 
   &:hover {
-    color: ${(props) =>
-      props.$selected ? 'var(--color_inside-accent)' : 'var(--color_accent)'};
+    color: var(--color_accent);
+    background: var(--bg_accent-soft);
 
     & .tooltip {
       transform: scale(1) translateX(0px);
@@ -117,29 +122,35 @@ export const ControlRow = styled.div`
   width: 100%;
   max-width: 960px;
   border-bottom: 1px solid var(--border_color_cell);
-  font-size: 20px;
+  font-size: 13.5px;
   justify-content: space-between;
   display: flex;
-  line-height: 50px;
-  min-height: 50px;
+  align-items: center;
+  line-height: 1.35;
+  min-height: 44px;
   box-sizing: border-box;
-  padding-left: 5px;
-  padding-right: 5px;
+  padding: 5px 8px;
+
+  &:last-child {
+    border-bottom: none;
+  }
 `;
 
 export const IndentedControlRow = styled(ControlRow)`
-  padding-left: 17px;
+  padding-left: 18px;
 `;
 
 export const Label = styled.label`
-  color: var(--color_label);
-  font-weight: 400;
+  color: var(--color_label-highlighted);
+  font-weight: 500;
+  font-size: 13px;
 `;
 
 export const SubLabel = styled(Label)`
-  font-size: 18px;
+  font-size: 12px;
   font-style: italic;
   font-weight: 400;
+  color: var(--color_label);
 `;
 
 export const Detail = styled.span`
@@ -151,20 +162,23 @@ export const Detail = styled.span`
 export const Row = styled.div<{$selected: boolean}>`
   cursor: pointer;
   white-space: nowrap;
-  margin-bottom: 15px;
-  font-size: 20px;
-  line-height: 20px;
-  text-transform: uppercase;
+  margin-bottom: 4px;
+  font-size: 12.5px;
+  line-height: 34px;
   color: ${(props) => getIconColor(props.$selected).style.color};
   border-left: 2px solid transparent;
+  border-radius: 8px;
+  padding: 0 6px;
+  transition: all 0.16s ease;
 
   svg {
-    height: 20px;
+    height: 17px;
     vertical-align: middle;
   }
 
   &:hover {
     color: var(--color_label-highlighted);
+    background: var(--bg_control);
 
     & .tooltip {
       transform: scale(1) translateX(0px);

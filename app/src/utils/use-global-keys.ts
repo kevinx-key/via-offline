@@ -1,51 +1,74 @@
 import {useEffect, useState} from 'react';
 import {TestKeyState} from 'src/types/types';
 import {getIndexByEvent} from './key-event';
+import {nativeBridge} from './native';
+import {vkToDomCode} from './vk-to-code';
 
 type TestKeys = {[code: number]: TestKeyState};
-export const useGlobalKeys = (enableGlobalKeys: boolean) => {
+
+export const useGlobalKeys = (
+  enableGlobalKeys: boolean,
+  nativeCaptureEnabled = false,
+) => {
   const startMatrixTest = !enableGlobalKeys;
   const selectedKeysState = useState<TestKeys>({});
-  const [selectedKeys, setSelectedKeys] = selectedKeysState;
-  // If pressed key is our target key then set to true
-  function downHandler(evt: KeyboardEvent) {
-    evt.preventDefault();
-    if (
-      !startMatrixTest &&
-      !evt.repeat &&
-      selectedKeys[getIndexByEvent(evt) ?? -1] !== TestKeyState.KeyDown
-    ) {
-      setSelectedKeys((selectedKeys) => ({
-        ...selectedKeys,
-        [getIndexByEvent(evt)]: TestKeyState.KeyDown,
-      }));
-    }
-  }
+  const [, setSelectedKeys] = selectedKeysState;
 
-  // If released key is our target key then set to false
-  const upHandler = (evt: KeyboardEvent) => {
-    evt.preventDefault();
-    if (
-      !startMatrixTest &&
-      selectedKeys[getIndexByEvent(evt)] !== TestKeyState.KeyUp
-    ) {
-      setSelectedKeys((selectedKeys) => ({
-        ...selectedKeys,
-        [getIndexByEvent(evt)]: TestKeyState.KeyUp,
-      }));
-    }
+  const applyKey = (code: string, state: TestKeyState) => {
+    if (!code) return;
+    const index = getIndexByEvent({code} as KeyboardEvent);
+    if (index < 0) return;
+    setSelectedKeys((previous) => {
+      if (previous[index] === state) return previous;
+      return {...previous, [index]: state};
+    });
   };
 
   useEffect(() => {
-    if (enableGlobalKeys) {
-      window.addEventListener('keydown', downHandler);
-      window.addEventListener('keyup', upHandler);
+    if (enableGlobalKeys && nativeCaptureEnabled && nativeBridge) {
+      return nativeBridge.onGlobalKey((event) => {
+        const code = vkToDomCode(event.vk, event.scan, event.extended);
+        applyKey(
+          code,
+          event.type === 'down' ? TestKeyState.KeyDown : TestKeyState.KeyUp,
+        );
+      });
     }
-    // Remove event listeners on cleanup
+
+    if (!enableGlobalKeys) {
+      return;
+    }
+    // If pressed key is our target key then set to true
+    const downHandler = (evt: KeyboardEvent) => {
+      evt.preventDefault();
+      if (!startMatrixTest && !evt.repeat) {
+        applyKey(evt.code, TestKeyState.KeyDown);
+      }
+    };
+
+    // If released key is our target key then set to false
+    const upHandler = (evt: KeyboardEvent) => {
+      evt.preventDefault();
+      if (!startMatrixTest) {
+        applyKey(evt.code, TestKeyState.KeyUp);
+      }
+    };
+
+    window.addEventListener('keydown', downHandler);
+    window.addEventListener('keyup', upHandler);
+
     return () => {
       window.removeEventListener('keydown', downHandler);
       window.removeEventListener('keyup', upHandler);
     };
-  }, [enableGlobalKeys]); // Empty array ensures that effect is only run on mount and unmount
+  }, [enableGlobalKeys, nativeCaptureEnabled]);
+
+  // Keep the state in sync when the caller clears it (Reset button).
+  useEffect(() => {
+    if (!enableGlobalKeys) {
+      setSelectedKeys({});
+    }
+  }, [enableGlobalKeys]);
+
   return selectedKeysState;
 };

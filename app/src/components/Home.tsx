@@ -38,6 +38,7 @@ import {KeyboardValue} from 'src/utils/keyboard-api';
 import {useTranslation} from 'react-i18next';
 import {MessageDialog} from './inputs/message-dialog';
 import {formatNumberAsHex} from 'src/utils/format';
+import {useLocation} from 'wouter';
 
 const ErrorHome = styled.div`
   background: var(--bg_gradient);
@@ -98,6 +99,7 @@ interface HomeProps {
 export const Home: React.FC<HomeProps> = (props) => {
   const {t} = useTranslation();
   const {hasHIDSupport} = props;
+  const [, setLocation] = useLocation();
 
   const dispatch = useAppDispatch();
   const selectedKey = useAppSelector(getSelectedKey);
@@ -236,6 +238,13 @@ export const Home: React.FC<HomeProps> = (props) => {
         <MessageDialog
           isOpen={true}
           confirmLabel="OK"
+          secondaryLabel={t('Load definition')}
+          onSecondary={() => {
+            dispatch(
+              dismissUnresolvedDefinitionDevice(unresolvedDefinitionDevice),
+            );
+            setLocation('/design');
+          }}
           onConfirm={() => {
             dispatch(
               dismissUnresolvedDefinitionDevice(unresolvedDefinitionDevice),

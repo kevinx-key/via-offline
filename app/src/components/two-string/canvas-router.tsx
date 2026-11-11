@@ -17,7 +17,6 @@ import {
   getDesignDefinitionVersion,
   getSelectedTheme,
 } from 'src/store/settingsSlice';
-import {getDarkenedColor} from 'src/utils/color-math';
 import {OVERRIDE_HID_CHECK} from 'src/utils/override';
 import {useSize} from 'src/utils/use-size';
 import styled from 'styled-components';
@@ -37,9 +36,9 @@ const KeyboardBG = styled.div<{
   bottom: 0;
   left: 0;
   background: ${(props) =>
-    `linear-gradient(30deg, rgba(150,150,150,1) 10%,${getDarkenedColor(
-      props.$color,
-    )} 50%, rgba(150,150,150,1) 90%)`};
+    `radial-gradient(58% 84% at 50% 42%, color-mix(in srgb, ${
+      props.$color
+    } 20%, transparent) 0%, transparent 72%)`};
   opacity: ${(props) => (props.$visible ? 1 : 0)};
 `;
 
@@ -104,7 +103,7 @@ export const CanvasRouter = () => {
     <>
       <div
         style={{
-          height: 500,
+          height: 'clamp(340px, 44vh, 500px)',
           width: '100%',
           top: 0,
           transform: hideCanvasScene
@@ -175,7 +174,7 @@ const KeyboardGroupContainer = styled.div`
   display: block;
   white-space: nowrap;
   height: 100%;
-  background: linear-gradient(90deg, red, blue);
+  background: transparent;
   width: max-content;
   position: absolute;
   top: 0;

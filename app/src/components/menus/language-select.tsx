@@ -6,28 +6,29 @@ import styled from 'styled-components';
 import {useTranslation} from 'react-i18next';
 
 const Container = styled.div`
-  position: absolute;
-  right: 200px;
-  font-size: 18px;
+  position: relative;
+  display: flex;
+  align-items: center;
 `;
 
 const LanguageList = styled.ul<{$show: boolean}>`
-  padding: 0;
-  border: 1px solid var(--bg_control);
+  padding: 6px;
+  border: 1px solid var(--border_color_cell);
   width: 160px;
-  border-radius: 6px;
+  border-radius: 10px;
   background-color: var(--bg_menu);
+  box-shadow: var(--shadow-2);
   margin: 0;
   margin-top: 5px;
-  top: 30px;
+  top: 40px;
   right: 0px;
   position: absolute;
   pointer-events: ${(props) => (props.$show ? 'all' : 'none')};
   transition: all 0.2s ease-out;
-  z-index: 11;
+  z-index: 41;
   opacity: ${(props) => (props.$show ? 1 : 0)};
   overflow: hidden;
-  transform: ${(props) => (props.$show ? 0 : `translateY(-5px)`)};
+  transform: ${(props) => (props.$show ? 'translateY(0)' : `translateY(-5px)`)};
 `;
 
 const LanugaeButton = styled.button<{$selected?: boolean}>`
@@ -40,21 +41,21 @@ const LanugaeButton = styled.button<{$selected?: boolean}>`
   text-overflow: ellipsis;
   width: 100%;
   border: none;
+  border-radius: 7px;
   background: ${(props) =>
-    props.$selected ? 'var(--bg_icon-highlighted)' : 'transparent'};
+    props.$selected ? 'var(--bg_accent-soft)' : 'transparent'};
   color: ${(props) =>
     props.$selected
-      ? 'var(--color_icon_highlighted)'
+      ? 'var(--color_accent)'
       : 'var(--color_label-highlighted)'};
   cursor: pointer;
   text-align: left;
-  font-size: 14px;
-  text-transform: uppercase;
-  padding: 5px 10px;
+  font-size: 12.5px;
+  padding: 7px 9px;
   &:hover {
     border: none;
     background: ${(props) =>
-      props.$selected ? 'var(--bg_icon-highlighted)' : 'var(--bg_control)'};
+      props.$selected ? 'var(--bg_accent-soft)' : 'var(--bg_control)'};
     color: ${(props) =>
       props.$selected
         ? 'var(--color_control-highlighted)'
@@ -70,8 +71,7 @@ const ClickCover = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  opacity: 0.4;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.12);
 `;
 
 const LanguageSelectors: React.FC<{

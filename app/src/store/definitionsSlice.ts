@@ -26,12 +26,11 @@ import {
   ensureSupportedIds,
   getSelectedKeyboardAPI,
 } from './devicesSlice';
-import {getMissingDefinition} from 'src/utils/device-store';
+import {getMissingDefinitionWithFallback} from 'src/utils/device-store';
 import {getBasicKeyDict} from 'src/utils/key-to-byte/dictionary-store';
 import {getByteToKey} from 'src/utils/key';
 import {del, entries, setMany, update} from 'idb-keyval';
 import {isFulfilledPromise} from 'src/utils/type-predicates';
-import {extractDeviceInfo, logAppError} from './errorsSlice';
 import {getSelectedKeycodesVersion} from './firmwareSlice';
 
 type LayoutOption = number;
@@ -346,20 +345,23 @@ export const reloadDefinitions =
     );
     const missingDefinitionsSettledPromises = await Promise.allSettled(
       missingDevicesToFetchDefinitions.map((device) =>
-        getMissingDefinition(device, device.requiredDefinitionVersion),
+        getMissingDefinitionWithFallback(
+          device,
+          device.requiredDefinitionVersion,
+        ),
       ),
     );
 
-    // Error Reporting
+    // A missing definition is expected for unsupported/custom boards. Keep it
+    // as a console note: the unresolved-device dialog already tells the user
+    // what to do, and logging one app error per retry just floods the UI.
     missingDefinitionsSettledPromises.forEach((settledPromise, i) => {
-      const device = missingDevicesToFetchDefinitions[i];
       if (settledPromise.status === 'rejected') {
-        const deviceInfo = extractDeviceInfo(device);
-        dispatch(
-          logAppError({
-            message: `Fetching ${device.requiredDefinitionVersion} definition failed`,
-            deviceInfo,
-          }),
+        const device = missingDevicesToFetchDefinitions[i];
+        console.info(
+          'No v2/v3 definition found for',
+          device.vendorProductId,
+          device.productName,
         );
       }
     });

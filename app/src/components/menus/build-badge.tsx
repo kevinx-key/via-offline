@@ -1,38 +1,43 @@
 import styled from 'styled-components';
+import {useTranslation} from 'react-i18next';
 
 const Container = styled.div`
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   align-items: center;
-  gap: 7px;
-  max-width: 22vw;
+  gap: 8px;
+  height: 34px;
+  padding-right: 14px;
+  margin-right: 2px;
+  border-right: 1px solid var(--border_color_cell);
   white-space: nowrap;
   color: var(--color_label);
-  font-size: 12px;
-  letter-spacing: 0.04em;
+  font-size: 11px;
+  letter-spacing: 0.02em;
   line-height: 1;
   user-select: none;
   pointer-events: none;
 `;
 
 const Mark = styled.img`
-  height: 17px;
-  width: 17px;
+  height: 24px;
+  width: 24px;
   display: block;
   flex: none;
-  opacity: 0.9;
+  border-radius: 6px;
+  opacity: 0.95;
+`;
+
+const Text = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 `;
 
 const Strong = styled.span`
-  font-weight: 500;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
   color: var(--color_label-highlighted);
-`;
-
-const Divider = styled.span`
-  opacity: 0.45;
 `;
 
 /**
@@ -40,20 +45,21 @@ const Divider = styled.span`
  * app, not an official VIA release. Kept deliberately visible (not hidden in an
  * "about" dialog) so the modified build can never be mistaken for upstream VIA.
  */
-export const BuildBadge = () => (
-  <Container
-    title={
-      'K-STAR 定制版 · VIA 离线版（非官方构建）\n' +
-      'Unofficial offline build of VIA · not affiliated with the VIA project.\n' +
-      'Based on github.com/the-via/app (GPL-3.0)'
-    }
-  >
-    <Mark src="/images/logo.png" alt="" />
-    <Strong>K-STAR</Strong>
-    <Divider>·</Divider>
-    <span>VIA 离线版（非官方）</span>
-  </Container>
-);
-
-
-
+export const BuildBadge = () => {
+  const {t} = useTranslation();
+  return (
+    <Container
+      title={
+        `K-STAR · ${t('VIA offline (unofficial)')}\n` +
+        'Unofficial offline build of VIA · not affiliated with the VIA project.\n' +
+        'Based on github.com/the-via/app (GPL-3.0)'
+      }
+    >
+      <Mark src="/images/logo.png" alt="" />
+      <Text>
+        <Strong>K-STAR</Strong>
+        <span className="badge-sub">{t('VIA offline (unofficial)')}</span>
+      </Text>
+    </Container>
+  );
+};

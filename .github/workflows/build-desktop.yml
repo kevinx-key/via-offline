@@ -62,7 +62,14 @@ jobs:
           cp -r app/dist build/app/dist
           cp app/electron/main.js build/app/main.js
           cp app/server.js build/app/server.js
+          cp app/electron/preload.js build/app/preload.js
+          cp app/electron/global-capture.js build/app/global-capture.js
+          cp app/electron/hid-picker.html build/app/hid-picker.html
+          cp app/electron/hid-picker-preload.js build/app/hid-picker-preload.js
+          cp app/electron/keyhook.bin build/app/keyhook.bin
           cp packaging/icon.png build/app/icon.png
+          cp packaging/icon.ico build/app/icon.ico
+          cp packaging/splash.bmp build/app/splash.bmp
           cp packaging/app-package.json build/app/package.json
           cp NOTICE.md build/app/NOTICE.txt
           cp LICENSE build/app/LICENSE

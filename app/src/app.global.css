@@ -280,49 +280,73 @@
   src: url(/fonts/fira/latin-wEOsEADFm8hSaQTFG18FErVhsC9x-tarWQXOuMR0cg.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
-/* This is a workaround to ← → missing in Google Fonts web font.
-Explicitly import the missing arrows.
-See https://stackoverflow.com/questions/40822458/styled-unicode-arrows-not-showing-up-with-google-fonts-web-font
- */
+/* ──────────────────────────────────────────────────────────────
+   K-STAR UI tokens · light/dark inspired by app.starthock.com
+   ────────────────────────────────────────────────────────────── */
 html,
-body {
+body,
+#root {
   height: 100%;
 }
+html,
+body {
+  overflow: hidden;
+}
+* {
+  box-sizing: border-box;
+}
 .configure-tooltip {
-  font-size: 20px !important;
-  background-color: rgba(255, 255, 255, 0.4);
+  font-size: 12px !important;
+  background-color: var(--bg_menu) !important;
+  border: 1px solid var(--border_color_cell);
+  border-radius: 7px;
+  box-shadow: var(--shadow-2);
 }
 body {
   position: relative;
-  color: white;
-  background-color: #232c39;
-  font-family: 'Fira Sans', 'Noto Sans Symbols', 'Noto Sans Symbols 2', Helvetica, Arial, serif;
-  font-weight: 300;
+  color: var(--color_label-highlighted);
+  background-color: var(--bg_app);
+  font-family: 'Fira Sans', 'Segoe UI', 'Microsoft YaHei', 'Noto Sans Symbols',
+    'Noto Sans Symbols 2', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
   overflow: hidden;
   margin: 0;
   padding: 0;
-  user-select: none;
+  /* Long-press / drag selection and Ctrl+C must work everywhere, especially
+     for error and diagnostic text. The top bar re-disables it for dragging. */
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-font-smoothing: antialiased;
 }
-button {
-  font-family: 'Fira Sans', 'Noto Sans Symbols', 'Noto Sans Symbols 2', Helvetica, Arial, serif;
-  font-weight: 300;
+
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 h2 {
   margin: 0;
-  font-size: 2.25rem;
-  font-weight: bold;
-  letter-spacing: -0.025em;
-  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color_label-highlighted);
 }
 p {
-  font-size: 24px;
+  font-size: 13px;
 }
 li {
   list-style: none;
 }
 a {
-  color: white;
-  opacity: 0.75;
+  color: inherit;
+  opacity: 0.85;
   text-decoration: none;
 }
 a:hover {
@@ -330,62 +354,106 @@ a:hover {
   text-decoration: none;
   cursor: pointer;
 }
+:focus-visible {
+  outline: 2px solid var(--color_accent);
+  outline-offset: 2px;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border_color_cell);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color_label);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
 :root {
-  --color_error: #d15e5e;
-  --color_light-grey: #d9d9d9;
-  --color_medium-grey: #707070;
-
-  --color_dark-grey: #414141;
-  --color_light-jet: #222;
-  --color_jet: #1d1b1b;
-  --color_warm-white: #fffbfb;
-  --color_tinge: #c7c3c3;
-  --color_tinge-light: #ebe4e4;
-  --color_tinge-dark: #796c6c;
-  --box-shadow-keycap: inset -1px -1px 0 rgb(0 0 0 / 20%),
-    inset 1px 1px 0 rgb(255 255 255 / 20%);
-  --box-shadow-keyboard: var(--box-shadow-keycap);
-
+  --font-mono: 'Cascadia Mono', Consolas, 'SF Mono', Menlo, monospace;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-1: 0 1px 2px rgba(16, 18, 22, 0.06);
+  --shadow-2: 0 2px 8px rgba(16, 18, 22, 0.08);
+  --shadow-3: 0 12px 32px rgba(16, 18, 22, 0.14);
+  --box-shadow-keycap: inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  --box-shadow-keyboard: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
 html[data-theme-mode='dark'] {
-  --color_label: var(--color_medium-grey);
-  --color_label-highlighted: var(--color_light-grey);
-  --color_error: var(--color_error);
-  --border_color_icon: var(--color_medium-grey);
-  --border_color_cell: var(--color_dark-grey);
-  --bg_icon: var(--color_medium-grey);
-  --bg_icon-highlighted: var(--color_light-grey);
-  --color_icon-highlighted: var(--color_jet);
-  --bg_menu: var(--color_light-jet);
-  --color_control: var(--color_dark-grey);
-  --bg_control: var(--color_dark-grey);
-  --bg_outside-accent: var(--color_dark-grey);
-  --bg_control_disabled: var(--color_dark-grey);
-  --bg_control-highlighted: var(--color_light-grey);
-  --bg_gradient: linear-gradient(var(--color_jet), var(--color_light-jet));
+  color-scheme: dark;
+  --bg_app: #0d1117;
+  --bg_gradient: #0d1117;
+  --bg_outside-accent: #161b22;
+  --bg_menu: #1c2128;
+  --bg_control: #21262d;
+  --bg_control-highlighted: #30363d;
+  --bg_icon: #30363d;
+  --bg_icon-highlighted: #58a6ff;
+  --color_icon_highlighted: #0d1117;
+  --color_label: #8b949e;
+  --color_label-highlighted: #c9d1d9;
+  --color_control: #c9d1d9;
+  --color_control-disabled: #484f58;
+  --color_accent: #58a6ff;
+  --color_inside-accent: #0d1117;
+  --color_success: #3fb950;
+  --color_warning: #d29922;
+  --color_danger: #f85149;
+  --color_error: #f85149;
+  --border_color_cell: #30363d;
+  --border_color_icon: #30363d;
+  --bg_accent-soft: rgba(88, 166, 255, 0.12);
+  --border_accent-soft: rgba(88, 166, 255, 0.35);
+  --bg_success-soft: rgba(63, 185, 80, 0.12);
+  --bg_danger-soft: rgba(248, 81, 73, 0.12);
+  --bg_control_disabled: #21262d;
   --bg_control-disabled: transparent;
+  --keycap-face-highlight: rgba(255, 255, 255, 0.16);
+  --keycap-face-shadow: rgba(0, 0, 0, 0.28);
 }
+
 html[data-theme-mode='light'] {
-  --color_label: var(--color_medium-grey);
-  --color_label-highlighted: var(--color_light-jet);
-  --color_error: var(--color_error);
-  --border_color_icon: var(--color_medium-grey);
-  --border_color_cell: var(--color_tinge-dark);
-  --bg_icon: var(--color_medium-grey);
-  --bg_icon-highlighted: var(--color_light-jet);
-  --color_icon-highlighted: var(--color_tinge-light);
-  --bg_menu: var(--color_tinge-light);
-  --color_control: var(--color_tinge-light);
-  --color_control-disabled: var(--color_tinge-light);
-  --bg_control: var(--color_tinge);
-  --bg_outside-accent: var(--color_tinge-light);
-  --bg_control-highlighted: var(--color_warm-white);
+  color-scheme: light;
+  --bg_app: #f5f5f7;
+  --bg_gradient: #f5f5f7;
+  --bg_outside-accent: #ffffff;
+  --bg_menu: #ffffff;
+  --bg_control: #f0f0f5;
+  --bg_control-highlighted: #e8e8ed;
+  --bg_icon: #e8e8ed;
+  --bg_icon-highlighted: #0071e3;
+  --color_icon_highlighted: #ffffff;
+  --color_label: #6e6e73;
+  --color_label-highlighted: #1d1d1f;
+  --color_control: #1d1d1f;
+  --color_control-disabled: #a1a1a6;
+  --color_accent: #0071e3;
+  --color_inside-accent: #ffffff;
+  --color_success: #34c759;
+  --color_warning: #ff9500;
+  --color_danger: #ff3b30;
+  --color_error: #ff3b30;
+  --border_color_cell: #d2d2d7;
+  --border_color_icon: #d2d2d7;
+  --bg_accent-soft: rgba(0, 113, 227, 0.08);
+  --border_accent-soft: rgba(0, 113, 227, 0.28);
+  --bg_success-soft: rgba(52, 199, 89, 0.12);
+  --bg_danger-soft: rgba(255, 59, 48, 0.1);
+  --bg_control_disabled: #f2f2f6;
   --bg_control-disabled: transparent;
-  --bg_gradient: linear-gradient(
-    var(--color_tinge-light),
-    var(--color_warm-white)
-  );
+  --keycap-face-highlight: rgba(255, 255, 255, 0.42);
+  --keycap-face-shadow: rgba(0, 0, 0, 0.16);
 }
 
 #root {
@@ -393,6 +461,8 @@ html[data-theme-mode='light'] {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 /* Noto Sans Symbols + Noto Sans Symbols 2 (SIL OFL 1.1), self-hosted */
 @font-face {
@@ -507,6 +577,3 @@ html[data-theme-mode='light'] {
     filter: brightness(1.25);
   }
 }
-
-
-
