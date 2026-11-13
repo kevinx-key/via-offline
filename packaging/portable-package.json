@@ -1,7 +1,7 @@
 {
   "name": "via-offline-ks",
   "productName": "VIA-Offline-KS",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Offline VIA build (K-STAR, unofficial)",
   "author": "K Star Studio",
   "license": "GPL-3.0",

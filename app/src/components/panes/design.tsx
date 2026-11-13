@@ -144,6 +144,7 @@ function importDefinitions(
   Promise.all(files.map(makeReaderPromise)).then((results) => {
     const errors: string[] = [];
     const parsed: ParsedDefinition[] = [];
+    const notes: string[] = [];
     setErrors([]);
     setImported(null);
 
@@ -151,10 +152,9 @@ function importDefinitions(
       try {
         const definitions = parseDefinitionText(result.toString());
         parsed.push(...definitions);
-        const notes = definitions.flatMap((entry) => entry.notes);
-        if (notes.length) {
-          setImported(`${fileName}：${Array.from(new Set(notes)).join('；')}`);
-        }
+        definitions.forEach((entry) =>
+          entry.notes.forEach((note) => notes.push(`${fileName}: ${note}`)),
+        );
       } catch (error) {
         if (error instanceof DefinitionImportError) {
           errors.push(`${fileName}：${error.detail}`);
@@ -192,13 +192,16 @@ function importDefinitions(
     });
 
     // Show the generation we actually detected instead of making the user
-    // discover the (deprecated) toggle.
+    // discover the (deprecated) toggle. Repairs applied while importing are
+    // appended so a silently degraded definition is visible.
     const firstVersion = parsed[0].version;
     dispatch(updateDesignDefinitionVersion(firstVersion));
+    const detected = `Detected ${firstVersion.toUpperCase()} definition automatically${
+      parsed.length > 1 ? ` (${parsed.length} files)` : ''
+    }`;
+    const uniqueNotes = Array.from(new Set(notes));
     setImported(
-      `Detected ${firstVersion.toUpperCase()} definition automatically${
-        parsed.length > 1 ? ` (${parsed.length} files)` : ''
-      }`,
+      uniqueNotes.length ? `${detected} · ${uniqueNotes.join(' · ')}` : detected,
     );
     dispatch(selectDevice(null));
     dispatch(reloadConnectedDevices());

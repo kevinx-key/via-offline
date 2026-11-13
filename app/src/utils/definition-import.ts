@@ -208,13 +208,59 @@ const filterOutOfBoundsKeys = (
   return next;
 };
 
+/**
+ * `validateLayouts()` / `kleLayoutToVIALayout()` only return geometry
+ * (width/height/optionKeys/keys). The author's own layout metadata has to be
+ * carried over: without `labels` every layout option key (split backspace,
+ * right shift, bottom row, ...) silently disappears from the keyboard, the
+ * layout options menu renders empty and the whole matrix looks misaligned.
+ */
+const withLayoutMetadata = (
+  raw: Record<string, any>,
+  parsedLayouts: any,
+): any => {
+  if (!raw.layouts || typeof raw.layouts !== 'object') {
+    return parsedLayouts;
+  }
+  const {keymap: _keymap, ...metadata} = raw.layouts;
+  return {...metadata, ...parsedLayouts};
+};
+
+/**
+ * Two keys pointing at the same matrix cell cannot be addressed independently:
+ * VIA renders both, paints the same keycode on each and writes to one cell.
+ * Keep the first occurrence and record the duplicate so it shows up in the
+ * import notes instead of quietly breaking the layout.
+ */
+const dropDuplicateMatrixKeys = (layouts: any, notes: string[]): any => {
+  if (!layouts || !Array.isArray(layouts.keys)) {
+    return layouts;
+  }
+  const seen = new Set<string>();
+  const duplicates: string[] = [];
+  const keys = layouts.keys.filter((key: any) => {
+    const id = `${key?.row},${key?.col}`;
+    if (seen.has(id)) {
+      duplicates.push(id);
+      return false;
+    }
+    seen.add(id);
+    return true;
+  });
+  if (!duplicates.length) {
+    return layouts;
+  }
+  notes.push(`Ignored duplicate matrix position(s): ${duplicates.join(' ')}`);
+  return {...layouts, keys};
+};
+
 const safeLayouts = (
   raw: Record<string, any>,
   notes: string[],
 ): any => {
   try {
     return filterOutOfBoundsKeys(
-      validateLayouts(raw.layouts),
+      withLayoutMetadata(raw, validateLayouts(raw.layouts)),
       raw.matrix,
       notes,
     );
@@ -224,7 +270,11 @@ const safeLayouts = (
     notes.push('Incomplete layout labels; restored layout from raw KLE data');
   }
   const fallback = kleLayoutToVIALayout(raw.layouts.keymap);
-  return filterOutOfBoundsKeys(fallback, raw.matrix, notes);
+  return filterOutOfBoundsKeys(
+    withLayoutMetadata(raw, fallback),
+    raw.matrix,
+    notes,
+  );
 };
 
 const normalizeLighting = (raw: Record<string, any>, notes: string[]): void => {
@@ -237,6 +287,14 @@ const normalizeLighting = (raw: Record<string, any>, notes: string[]): void => {
     'wt_rgb_backlight',
     'wt_mono_backlight',
   ];
+  // Upstream VIA requires `lighting`, but vendor definitions frequently omit
+  // it. Treat a missing value as "no lighting" so the strict reader accepts the
+  // file instead of dropping into compatibility mode.
+  if (lighting === undefined || lighting === null || lighting === '') {
+    raw.lighting = 'none';
+    notes.push('No lighting declared; treated as no lighting');
+    return;
+  }
   if (typeof lighting === 'string' && !known.includes(lighting)) {
     raw.lighting = 'none';
     notes.push(`Unknown lighting type ${lighting}; treated as no lighting`);
@@ -255,11 +313,12 @@ const convertV3 = (
   const raw = clone(source);
   normalizeV3Keycodes(raw, notes);
   normalizeMenus(raw, notes);
+  let definition: VIADefinitionV3;
   try {
-    return keyboardDefinitionV3ToVIADefinitionV3(raw as any);
+    definition = keyboardDefinitionV3ToVIADefinitionV3(raw as any);
   } catch {
     notes.push('Definition schema repaired automatically (compatibility mode)');
-    return {
+    definition = {
       name: raw.name ?? 'Unknown keyboard',
       vendorProductId: getVendorProductId(raw as any),
       firmwareVersion: Number(raw.firmwareVersion) || 0,
@@ -270,6 +329,10 @@ const convertV3 = (
       layouts: safeLayouts(raw, notes),
     } as VIADefinitionV3;
   }
+  return {
+    ...definition,
+    layouts: dropDuplicateMatrixKeys(definition.layouts, notes),
+  };
 };
 
 const convertV2 = (
@@ -278,11 +341,12 @@ const convertV2 = (
 ): VIADefinitionV2 => {
   const raw = clone(source);
   normalizeLighting(raw, notes);
+  let definition: VIADefinitionV2;
   try {
-    return keyboardDefinitionV2ToVIADefinitionV2(raw as any);
+    definition = keyboardDefinitionV2ToVIADefinitionV2(raw as any);
   } catch {
     notes.push('Definition schema repaired automatically (compatibility mode)');
-    return {
+    definition = {
       name: raw.name ?? 'Unknown keyboard',
       vendorProductId: getVendorProductId(raw as any),
       lighting: raw.lighting ?? 'none',
@@ -293,6 +357,10 @@ const convertV2 = (
       layouts: safeLayouts(raw, notes),
     } as VIADefinitionV2;
   }
+  return {
+    ...definition,
+    layouts: dropDuplicateMatrixKeys(definition.layouts, notes),
+  };
 };
 
 /** Parse a single JSON value that already came from JSON.parse. */
@@ -322,10 +390,24 @@ export const parseDefinition = (input: unknown): ParsedDefinition => {
     if (isV3Shape) {
       normalizeV3Keycodes(repaired, notes);
       normalizeMenus(repaired, notes);
-      return {version: 'v3', definition: repaired as VIADefinitionV3, notes};
+      return {
+        version: 'v3',
+        definition: {
+          ...repaired,
+          layouts: dropDuplicateMatrixKeys(repaired.layouts, notes),
+        } as VIADefinitionV3,
+        notes,
+      };
     }
     normalizeLighting(repaired, notes);
-    return {version: 'v2', definition: repaired as VIADefinitionV2, notes};
+    return {
+      version: 'v2',
+      definition: {
+        ...repaired,
+        layouts: dropDuplicateMatrixKeys(repaired.layouts, notes),
+      } as VIADefinitionV2,
+      notes,
+    };
   }
 
   if (!raw.name || !raw.vendorId || !raw.productId || !raw.matrix) {
