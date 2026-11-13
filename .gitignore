@@ -6,3 +6,4 @@ public/definitions/
 *.log
 *.exe
 *.blockmap
+launcher/target/

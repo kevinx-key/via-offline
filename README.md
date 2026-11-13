@@ -17,6 +17,7 @@
 
 - **真·完全离线**：键盘定义、Fira Sans 字体、three.js 的 Draco 解码器全部打包；Chromium 的拼写检查词典下载、组件更新、DNS 预解析等后台联网全部关闭，并在解析器与请求两层封死。
 - **三平台**：Windows 单文件 exe、macOS zip/dmg、Linux AppImage。
+- **Windows 单文件秒开**：1.2.0 起 exe 只解压一次（`runtime\<版本>\`），之后冷启动约 0.8 s；换版本自动清理旧缓存，`VIA-Offline-Data` 始终在 exe 旁边。
 - **1898 个厂商产品 ID 随包**：等于 VIA 官方定义库到构建快照为止的全部内容；另有手动选择 / 显示全部 HID / 弹窗内重新扫描。
 - **V2/V3 自动识别**：侧载旧 JSON 不再需要手动切 V2 兼容，常见灯光格式问题自动修复。
 - **新 UI**：单顶部栏、无原生标题栏、可拖动；白天 Olivia / 黑夜 ERROR 主题，可手动切换；白心黑底 K-STAR 标识。
@@ -34,6 +35,7 @@ app/                  # the-via/app 源码 + 本项目的修改（不含 node_mo
   public/definitions/ # 构建时生成（未入库，见 docs/build-notes.md）
 tools/                # 品牌/字体/图标/配色脚本
 packaging/            # electron-builder 打包配置与外壳副本
+launcher/             # Windows 单文件引导器（Rust）：pack 打包 + 首次解压 + splash
 docs/build-notes.md   # 完整构建与修改记录
 NOTICE.md             # GPL-3.0 要求的修改声明
 LICENSE               # GPL-3.0
@@ -48,7 +50,9 @@ node --import tsx node_modules/via-keyboards/scripts/build-all.ts public/definit
 npx tsc && npx vite build && node postbuild-offline.js
 ```
 
-打包成单文件 exe 的完整步骤见 [docs/build-notes.md](docs/build-notes.md)。
+Windows 单文件由 `launcher/`（Rust）生成：`electron-builder --win --x64 --dir` 之后用
+`via-pack` 打包，细节见 [launcher/README.md](launcher/README.md)。
+完整构建步骤见 [docs/build-notes.md](docs/build-notes.md)。
 
 ## 许可
 

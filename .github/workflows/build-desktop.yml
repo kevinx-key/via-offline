@@ -85,6 +85,20 @@ jobs:
           --${{ matrix.platform }} ${{ matrix.arch }}
           --publish never
 
+      # 4. Windows：把 win-unpacked 压成单文件 exe（首次运行解压一次，之后秒开）
+      - name: Build single-file launcher (win)
+        if: matrix.platform == 'win'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo build --release --locked --manifest-path launcher/Cargo.toml
+          VER=$(node -p "require('./packaging/app-package.json').version")
+          mkdir -p dist-out
+          ./launcher/target/release/via-pack.exe \
+            --dir build/app/out/win-unpacked \
+            --out "dist-out/VIA-Offline-KS-${VER}-win-x64.exe"
+          ls -lh dist-out
+
       - name: Collect artifacts
         shell: bash
         run: |

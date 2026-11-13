@@ -4,6 +4,14 @@ copyright: GPL-3.0 · K Star Studio
 
 electronVersion: 33.4.11
 
+# Chromium ships 55 UI locales (~40 MB unpacked). The app has its own i18n in
+# app/src/locales, so only these three are needed; dropping the rest keeps the
+# download and the extraction smaller.
+electronLanguages:
+  - zh-CN
+  - zh-TW
+  - en-US
+
 directories:
   output: out
   buildResources: .
@@ -25,15 +33,12 @@ asar: true
 compression: normal
 
 win:
+  # No portable target any more: `launcher/` (via-pack) turns this unpacked
+  # directory into the single-file exe. A plain `dir` build is all we need.
   target:
-    - target: portable
+    - target: dir
       arch: [x64]
   icon: icon.ico
-  artifactName: ${productName}-${version}-win-x64.${ext}
-
-portable:
-  splashImage: splash.bmp
-  unpackDirName: false
 
 mac:
   target:

@@ -1,0 +1,39 @@
+[package]
+name = "via-launcher"
+version = "1.2.0"
+edition = "2021"
+description = "Single-file launcher for VIA-Offline-KS: extracts the app once, then starts it"
+license = "GPL-3.0"
+publish = false
+
+[lib]
+name = "via_launcher"
+path = "src/lib.rs"
+
+[[bin]]
+name = "via-launcher"
+path = "src/bin/launcher.rs"
+
+[[bin]]
+name = "via-pack"
+path = "src/bin/pack.rs"
+
+[dependencies]
+lzma-rust2 = "0.13"
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Threading",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+[build-dependencies]
+winres = "0.1"
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
+panic = "abort"
+codegen-units = 1
