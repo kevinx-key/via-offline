@@ -6,6 +6,7 @@ import {
   syncStore,
 } from '../utils/device-store';
 import {getRecognisedDevices, getVendorProductId} from '../utils/hid-keyboards';
+import {readVialForDevice, vialCacheToDictionary} from '../utils/vial-keyboards';
 import {KeyboardAPI} from '../utils/keyboard-api';
 import type {AppThunk} from './index';
 import {
@@ -315,7 +316,8 @@ export const reloadConnectedDevices =
  * without a bundled definition still shows up with a useful message.
  */
 export const requestDeviceFromUser =
-  (options?: {showAll?: boolean}): AppThunk => async (dispatch) => {
+  (options?: {showAll?: boolean}): AppThunk =>
+  async (dispatch, getState) => {
     let requested: WebVIADevice | undefined;
     try {
       requested = await HID.requestDevice(options?.showAll !== false);
@@ -341,6 +343,30 @@ export const requestDeviceFromUser =
       protocol = -1;
     }
     if (protocol === -1) {
+      // ---- Vial 自动识别 ---------------------------------------------
+      // VIA 协议不通 ≠ 不支持的键盘：Vial 固件把定义烧在固件里（0xFE 自描述）。
+      // 命中后把定义注册进 store，再走正常重扫，用户侧体验等同「内置定义」。
+      const vial = await readVialForDevice(requested).catch(() => null);
+      if (vial) {
+        const definitions = getDefinitions(getState());
+        dispatch(
+          updateDefinitions({
+            ...definitions,
+            [vial.key]: {
+              ...(definitions[vial.key] ?? {}),
+              [vial.version]: vial.definition,
+            },
+          } as KeyboardDictionary),
+        );
+        console.info('Vial definition loaded from firmware', vial.name, vial.key);
+        dispatch(setForceAuthorize(true));
+        try {
+          await dispatch(reloadConnectedDevices({allowUnsupported: true}));
+        } finally {
+          dispatch(setForceAuthorize(false));
+        }
+        return;
+      }
       dispatch(
         updateInvalidProtocolDevices({
           [requested.path]: {
@@ -366,7 +392,9 @@ export const loadSupportedIds = (): AppThunk => async (dispatch) => {
   await syncStore();
   dispatch(updateSupportedIds(getSupportedIdsFromStore()));
   // John you drongo, don't trust the compiler, dispatches are totes awaitable for async thunks
-  await dispatch(updateDefinitions(getDefinitionsFromStore()));
+  // 内置定义 + 上次从固件读到的 Vial 定义（后者按 VID/PID 覆盖，实现开机即识别）
+  const {dictionary: vialCached} = vialCacheToDictionary();
+  dispatch(updateDefinitions({...getDefinitionsFromStore(), ...vialCached}));
   dispatch(loadStoredCustomDefinitions());
   dispatch(reloadConnectedDevices());
 };
