@@ -1,0 +1,135 @@
+name: build-via-offline
+
+# 手动触发，或打 tag（v1.2.1 之类）时自动出三平台产物并建 Release
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install renderer deps
+        working-directory: app
+        run: npm ci
+
+      - name: Build renderer (definitions + tsc + vite + offline patch)
+        working-directory: app
+        run: |
+          node --import tsx node_modules/via-keyboards/scripts/build-all.ts public/definitions
+          npx tsc
+          npx vite build
+          node postbuild-offline.js
+
+      - name: Assemble electron shell into app root
+        working-directory: app
+        shell: pwsh
+        run: |
+          Copy-Item electron\main.js main.js -Force
+          Copy-Item electron\preload.js preload.js -Force
+          Copy-Item electron\global-capture.js global-capture.js -Force
+          Copy-Item electron\hid-picker.html hid-picker.html -Force
+          Copy-Item electron\hid-picker-preload.js hid-picker-preload.js -Force
+          Copy-Item electron\keyhook.bin keyhook.bin -Force
+          Copy-Item ..\packaging\icon.png icon.png -Force
+          Copy-Item ..\packaging\icon.ico icon.ico -Force
+          Copy-Item package.json package.json.renderer -Force
+          Copy-Item ..\packaging\app-package.json package.json -Force
+          Copy-Item LICENSE LICENSE -Force -ErrorAction SilentlyContinue
+          Copy-Item NOTICE.md NOTICE.txt -Force -ErrorAction SilentlyContinue
+
+      - name: Package win-unpacked
+        working-directory: app
+        run: |
+          npm i -D --no-save electron@33.4.11 electron-builder@25
+          npx electron-builder --win dir --x64 --config ../packaging/builder.yml
+
+      - name: Build launcher (Rust) and pack single-file exe
+        run: |
+          cargo build --release --manifest-path launcher/Cargo.toml
+          $version = (Get-Content app/out/win-unpacked/resources/app/package.json | ConvertFrom-Json).version
+          launcher/target/release/via-pack.exe --dir app/out/win-unpacked --out "app/out/VIA-Offline-KS-$version-win64.exe"
+        shell: pwsh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: via-win
+          path: app/out/VIA-Offline-KS-*-win64.exe
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install renderer deps
+        working-directory: app
+        run: npm ci
+
+      - name: Build renderer
+        working-directory: app
+        run: |
+          node --import tsx node_modules/via-keyboards/scripts/build-all.ts public/definitions
+          npx tsc
+          npx vite build
+          node postbuild-offline.js
+
+      - name: Assemble electron shell into app root
+        working-directory: app
+        run: |
+          cp electron/main.js electron/preload.js electron/global-capture.js \
+             electron/hid-picker.html electron/hid-picker-preload.js electron/keyhook.bin .
+          cp ../packaging/icon.png ../packaging/icon.ico .
+          cp package.json package.json.renderer
+          cp ../packaging/app-package.json package.json
+          cp ../LICENSE LICENSE 2>/dev/null || true
+          cp ../NOTICE.md NOTICE.txt 2>/dev/null || true
+
+      - name: Package dmg + zip (unsigned)
+        working-directory: app
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: |
+          npm i -D --no-save electron@33.4.11 electron-builder@25
+          npx electron-builder --mac dmg zip --x64 --arm64 --config ../packaging/builder.yml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: via-mac
+          path: |
+            app/out/*.dmg
+            app/out/*.zip
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/via-win/**
+            artifacts/via-mac/**
+          generate_release_notes: true
